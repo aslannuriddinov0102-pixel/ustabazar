@@ -1720,7 +1720,7 @@ function AdminPanelPage({ user, token, setPage }) {
       <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
         <h1 className="font-display text-2xl font-bold mb-2">Admin panel</h1>
         <p className="text-ink-500 text-sm mb-6">Faqat admin kirishi mumkin</p>
-        <p className="text-xs text-ink-400 mb-4">Demo: +998900000001 / demo1234</p>
+        <p className="text-xs text-ink-400 mb-4">Admin: +998888602533 / demo1234</p>
         <button onClick={() => setPage('auth')} className="px-6 py-3 bg-ink-900 text-white rounded-xl font-semibold">Kirish</button>
       </div>
     );
@@ -1989,7 +1989,7 @@ function AuthPage({ setPage, setUser, setToken }) {
   const demoLogin = async (r) => {
     setLoading(true);
     try {
-      const phone = r === 'admin' ? '+998900000001' : r === 'master' ? '+998901234567' : '+998912345678';
+      const phone = r === 'admin' ? '+998888602533' : r === 'master' ? '+998901234567' : '+998912345678';
       const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password: 'demo1234' }) });
       finishAuth(data);
     } catch {

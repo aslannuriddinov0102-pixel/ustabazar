@@ -50,6 +50,12 @@ function masterCoords(city, idx) {
   return { lat: +(base.lat + (idx % 4) * 0.012).toFixed(5), lng: +(base.lng + (idx % 3) * 0.015).toFixed(5) };
 }
 
+const ADMIN_USER = {
+  name: 'Nuriddinov Aslan Adhamovich',
+  phone: '+998888602533',
+  telegram: 'AslanNuriddinov',
+};
+
 const DEMO_MASTERS = [
   { name: 'Jamshid Karimov', phone: '+998901234567', title: 'Santexnik usta', city: 'Toshkent', category: 'Santexnika', bio: '12 yillik tajriba, favqulodda xizmat', rating: 4.9, verified: 1 },
   { name: 'Abdulloh Karimov', phone: '+998901111111', title: 'Elektrik usta', city: 'Toshkent', category: 'Elektrik', bio: '8 yil, uy va ofis elektr montaji', rating: 4.8, verified: 1 },
@@ -93,11 +99,18 @@ function ensureDemo() {
     if (m && !m.category) { m.category = 'Santexnika'; }
   }
 
-  if (!data.users.find(u => u.role === 'admin')) {
-    data.users.push({
-      id: nextId('users'), name: 'Platforma Admin', phone: '+998900000001',
-      password: hash, role: 'admin', referral_code: genRefCode(), status: 'active', created_at: now(),
-    });
+  let admin = data.users.find(u => u.role === 'admin');
+  if (!admin) {
+    admin = {
+      id: nextId('users'), name: ADMIN_USER.name, phone: ADMIN_USER.phone,
+      telegram: ADMIN_USER.telegram, password: hash, role: 'admin',
+      referral_code: genRefCode(), status: 'active', created_at: now(),
+    };
+    data.users.push(admin);
+  } else {
+    admin.name = ADMIN_USER.name;
+    admin.phone = ADMIN_USER.phone;
+    admin.telegram = ADMIN_USER.telegram;
   }
 
   if (!data.leads) data.leads = [];
@@ -117,7 +130,7 @@ function ensureDemo() {
 
   persist();
   console.log('Demo: +998901234567 (usta) / +998912345678 (mijoz) — parol: demo1234');
-  console.log('Admin: +998900000001 — parol: demo1234');
+  console.log(`Admin: ${ADMIN_USER.phone} (${ADMIN_USER.name}) — parol: demo1234`);
   console.log(`Ustalar: ${data.masters.length} ta`);
 }
 

@@ -129,7 +129,7 @@ async function sendStatus(chatId) {
   if (data.error) {
     return tg('sendMessage', {
       chat_id: chatId,
-      text: `❌ ${data.error}\n\nHisob ulash: <code>/link +998901234567</code>\n(Saytdagi telefon raqamingiz)`,
+      text: `❌ ${data.error}\n\nHisob ulash: <code>/link +998...</code>\n(Saytdagi telefon raqamingiz)`,
       parse_mode: 'HTML',
     });
   }
@@ -202,7 +202,7 @@ async function handleMessage(msg) {
       if (!phone) {
         return tg('sendMessage', {
           chat_id: chatId,
-          text: 'Telefon kiriting:\n<code>/link +998901234567</code>\n\nSaytda ro\'yxatdan o\'tgan raqam bo\'lishi kerak.',
+          text: 'Telefon kiriting:\n<code>/link +998888602533</code>\n\nSaytda ro\'yxatdan o\'tgan raqam bo\'lishi kerak.',
           parse_mode: 'HTML',
         });
       }
