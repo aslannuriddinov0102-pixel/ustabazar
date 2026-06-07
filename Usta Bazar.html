@@ -252,6 +252,43 @@ const ROADMAP_PHASES = [
 
 const PAGES = [...MAIN_PAGES, ...MVP_PAGES];
 
+function getNavByRole(user) {
+  const pick = (ids, list) => list.filter(p => ids.includes(p.id));
+  if (!user) {
+    return {
+      main: pick(['landing', 'masters', 'map', 'profile', 'order'], MAIN_PAGES),
+      mvp: pick(['auth', 'onboarding', 'referral', 'b2b', 'roadmap', 'investors', 'legal'], MVP_PAGES),
+      all: pick(['landing', 'masters', 'map', 'profile', 'order', 'auth', 'onboarding', 'referral', 'b2b', 'roadmap', 'investors', 'legal'], PAGES),
+    };
+  }
+  if (user.role === 'admin') {
+    return {
+      main: MAIN_PAGES,
+      mvp: MVP_PAGES.filter(p => p.id !== 'auth'),
+      all: PAGES.filter(p => p.id !== 'auth'),
+    };
+  }
+  if (user.role === 'master') {
+    return {
+      main: pick(['landing', 'dashboard', 'order', 'payment'], MAIN_PAGES),
+      mvp: pick(['referral', 'b2b', 'legal'], MVP_PAGES),
+      all: pick(['landing', 'dashboard', 'order', 'payment', 'referral', 'b2b', 'legal'], PAGES),
+    };
+  }
+  return {
+    main: pick(['landing', 'masters', 'map', 'profile', 'order', 'customer', 'payment'], MAIN_PAGES),
+    mvp: pick(['referral', 'b2b', 'legal'], MVP_PAGES),
+    all: pick(['landing', 'masters', 'map', 'profile', 'order', 'customer', 'payment', 'referral', 'b2b', 'legal'], PAGES),
+  };
+}
+
+function homePageForUser(user) {
+  if (!user) return 'landing';
+  if (user.role === 'admin') return 'admin';
+  if (user.role === 'master') return 'dashboard';
+  return 'customer';
+}
+
 const FINANCIALS = [
   { year: '2026', masters: 500, orders: '5 000', gmv: '$120K', revenue: '$15K', margin: '12.5%' },
   { year: '2027', masters: '2 000', orders: '25 000', gmv: '$600K', revenue: '$75K', margin: '12.5%' },
@@ -777,24 +814,30 @@ function EmergencyFAB({ setPage }) {
 }
 
 function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
-    return (
+  const nav = getNavByRole(user);
+  const roleLabel = user?.role === 'admin' ? 'Admin' : user?.role === 'master' ? 'Usta' : user ? 'Mijoz' : null;
+
+  return (
     <header className="sticky top-0 z-50">
       <div className="glass border-b border-ink-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="hidden lg:grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2">
-            <button onClick={() => setPage('landing')} className="flex items-center gap-2.5 group shrink-0">
+            <button onClick={() => setPage(homePageForUser(user))} className="flex items-center gap-2.5 group shrink-0">
               <img src="./logo.svg" alt="Usta Bazar" className="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/25" />
               <span className="font-display font-bold text-xl text-ink-900">Usta <span className="text-brand-600">Bazar</span></span>
             </button>
             <nav className="flex flex-wrap items-center justify-center gap-0.5 px-1">
-              {MAIN_PAGES.map(p => (
+              {roleLabel && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold mr-1 ${user.role === 'admin' ? 'bg-ink-900 text-white' : user.role === 'master' ? 'bg-brand-500 text-white' : 'bg-emerald-100 text-emerald-700'}`}>{roleLabel}</span>
+              )}
+              {nav.main.map(p => (
                 <button key={p.id} onClick={() => setPage(p.id)}
                   className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-brand-100 text-brand-700' : 'text-ink-600 hover:bg-ink-100'}`}>
                   {p.label}
                 </button>
               ))}
-              <span className="w-px h-4 bg-ink-200 mx-0.5"></span>
-              {MVP_PAGES.map(p => (
+              {nav.mvp.length > 0 && <span className="w-px h-4 bg-ink-200 mx-0.5"></span>}
+              {nav.mvp.map(p => (
                 <button key={p.id} onClick={() => setPage(p.id)}
                   className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-emerald-100 text-emerald-700' : 'text-ink-500 hover:bg-ink-100'}`}>
                   {p.label}
@@ -823,7 +866,7 @@ function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
             <div className="flex items-center gap-2">
               <NotificationBell wsEvent={wsEvent} />
               <select value={page} onChange={e => setPage(e.target.value)} className="text-sm border border-ink-200 rounded-lg px-2 py-1.5 bg-white max-w-[8rem]">
-                {PAGES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                {nav.all.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
               </select>
             </div>
           </div>

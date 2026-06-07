@@ -1,4 +1,4 @@
-const CACHE = 'ustabazar-v10';
+const CACHE = 'ustabazar-v11';
 const ASSETS = ['./Usta Bazar.html', './manifest.webmanifest', './logo.svg', './logo-icon.svg'];
 
 self.addEventListener('install', (e) => {
