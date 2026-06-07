@@ -1,0 +1,2838 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usta Bazar — O'zbekiston #1 | $500K yo'l xaritasi</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#f97316" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="description" content="O'zbekistonning eng ishonchli usta platformasi — santexnik, elektrik, tozalash va boshqalar" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#fff7ed',100:'#ffedd5',200:'#fed7aa',300:'#fdba74',400:'#fb923c',500:'#f97316',600:'#ea580c',700:'#c2410c',800:'#9a3412',900:'#7c2d12' },
+            ink: { 50:'#f8fafc',100:'#f1f5f9',200:'#e2e8f0',300:'#cbd5e1',400:'#94a3b8',500:'#64748b',600:'#475569',700:'#334155',800:'#1e293b',900:'#0f172a' }
+          },
+          fontFamily: { sans: ['DM Sans', 'system-ui', 'sans-serif'], display: ['Outfit', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <style>
+    * { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; }
+    .font-display { font-family: 'Outfit', system-ui, sans-serif; }
+    .glass { background: rgba(255,255,255,.72); backdrop-filter: blur(12px); }
+    .gradient-hero { background: linear-gradient(135deg, #fff7ed 0%, #ffffff 40%, #f0f9ff 100%); }
+    .card-hover { transition: transform .2s, box-shadow .2s; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -12px rgba(15,23,42,.15); }
+    .chat-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+    .page-enter { animation: fadeUp .35s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .marquee-track { display:flex; animation:marquee 28s linear infinite; width:max-content; }
+    @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .sos-pulse { animation:sosPulse 2s ease-in-out infinite; }
+    @keyframes sosPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 50%{box-shadow:0 0 0 12px rgba(239,68,68,0)} }
+    .uz-gradient { background:linear-gradient(90deg,#1e88e5 0%,#fff 33%,#fff 66%,#43a047 100%); height:3px; }
+  </style>
+</head>
+<body class="bg-ink-50 text-ink-800 antialiased">
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ─── Mock Data ─── */
+const CATEGORIES = [
+  { id: 1, name: 'Santexnika', icon: '🔧', count: 142 },
+  { id: 2, name: 'Elektrik', icon: '⚡', count: 98 },
+  { id: 3, name: 'Duradgorlik', icon: '🪚', count: 76 },
+  { id: 4, name: "Bo'yoqchi", icon: '🎨', count: 115 },
+  { id: 5, name: 'Konditsioner', icon: '❄️', count: 54 },
+  { id: 6, name: 'Tozalash', icon: '✨', count: 203 },
+];
+
+const MASTER = {
+  id: 'm1',
+  name: 'Jamshid Karimov',
+  title: 'Santexnik usta',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jamshid&backgroundColor=f97316',
+  rating: 4.9,
+  reviews: 287,
+  jobs: 412,
+  verified: true,
+  online: true,
+  location: 'Toshkent, Yunusobod',
+  memberSince: '2019',
+  responseTime: '~15 daqiqa',
+  bio: "12 yildan ortiq tajribaga ega litsenziyalangan santexnik. Quvur ta'miri, hammom ta'mirlash, suv isitgich o'rnatish va favqulodda oqishlarni bartaraf etish bo'yicha mutaxassis. Sifatli ish va adolatli narx kafolat beraman.",
+  services: [
+    { name: 'Quvur oqishini tuzatish', price: '150 000', unit: "so'm", duration: '1–2 soat' },
+    { name: 'Hammom ta\'mirlash', price: '2 500 000', unit: "so'm", duration: '3–5 kun' },
+    { name: 'Suv isitgich o\'rnatish', price: '800 000', unit: "so'm", duration: '4 soat' },
+    { name: 'Quvurni tozalash', price: '120 000', unit: "so'm", duration: '1 soat' },
+  ],
+  gallery: ['🛁', '🔩', '🚿', '🏠'],
+  reviewsList: [
+    { user: 'Dilnoza M.', rating: 5, text: 'Bir soat ichida oqishni tuzatdi. Juda professional!', date: '2 kun oldin' },
+    { user: 'Rustam A.', rating: 5, text: "Ajoyib hammom ta'mirlash. Tavsiya qilaman.", date: '1 hafta oldin' },
+    { user: 'Nigora S.', rating: 4, text: 'Yaxshi ish, vaqtida keldi.', date: '2 hafta oldin' },
+  ],
+};
+
+const ORDER = {
+  id: 'ORD-2847',
+  service: 'Quvur oqishini tuzatish',
+  master: MASTER.name,
+  status: 'in_progress',
+  date: '6-iyun, 2026',
+  time: '14:00',
+  address: "Toshkent, Navoiy ko'chasi 12, 45-xonadon",
+  price: 150000,
+  fee: 15000,
+  total: 165000,
+};
+
+const CHAT_MESSAGES = [
+  { id: 1, from: 'master', text: 'Salom! Buyurtmangizni oldim. Bugun soat 14:00 da kelaman.', time: '10:32' },
+  { id: 2, from: 'user', text: 'Ajoyib, rahmat! Oqish oshxona lavobining ostida.', time: '10:35' },
+  { id: 3, from: 'master', text: "Tushundim. Iltimos, suv ventilini ochiq qoldiring. Ehtiyot qismlar olib kelaman.", time: '10:36' },
+  { id: 4, from: 'user', text: 'Mayli. Soat 14:00 da ko\'rishamiz!', time: '10:38' },
+  { id: 5, from: 'system', text: 'Buyurtma holati "Jarayonda" ga o\'zgartirildi', time: '14:01' },
+];
+
+const DASHBOARD_ORDERS = [
+  { id: 'ORD-2847', client: 'Sardor K.', service: 'Quvur oqishini tuzatish', status: 'in_progress', amount: 150000, date: 'Bugun' },
+  { id: 'ORD-2841', client: 'Malika T.', service: 'Quvurni tozalash', status: 'pending', amount: 120000, date: 'Ertaga' },
+  { id: 'ORD-2835', client: 'Bobur N.', service: "Suv isitgich o'rnatish", status: 'completed', amount: 800000, date: '4-iyun' },
+  { id: 'ORD-2829', client: 'Zarina H.', service: "Hammom ta'mirlash", status: 'completed', amount: 2500000, date: '28-may' },
+];
+
+const ADMIN_USERS = [
+  { id: 1, name: 'Sardor K.', role: 'customer', status: 'active', orders: 8 },
+  { id: 2, name: 'Jamshid Karimov', role: 'master', status: 'active', orders: 412 },
+  { id: 3, name: 'Malika T.', role: 'customer', status: 'active', orders: 3 },
+  { id: 4, name: 'Rustam A.', role: 'customer', status: 'suspended', orders: 1 },
+  { id: 5, name: 'Dilnoza M.', role: 'master', status: 'pending', orders: 0 },
+];
+
+const ADMIN_ORDERS = [
+  { id: 'ORD-2847', customer: 'Sardor K.', master: 'Jamshid K.', amount: 165000, status: 'in_progress' },
+  { id: 'ORD-2841', customer: 'Malika T.', master: 'Jamshid K.', amount: 132000, status: 'pending' },
+  { id: 'ORD-2835', customer: 'Bobur N.', master: 'Jamshid K.', amount: 880000, status: 'completed' },
+  { id: 'ORD-2820', customer: 'Nigora S.', master: 'Dilnoza M.', amount: 220000, status: 'disputed' },
+];
+
+const MAIN_PAGES = [
+  { id: 'landing', label: 'Bosh sahifa' },
+  { id: 'masters', label: 'Ustalar' },
+  { id: 'map', label: 'GPS xarita' },
+  { id: 'profile', label: 'Usta profili' },
+  { id: 'order', label: 'Buyurtma' },
+  { id: 'customer', label: 'Mijoz kabineti' },
+  { id: 'dashboard', label: 'Usta paneli' },
+  { id: 'payment', label: "To'lov" },
+];
+
+const MVP_PAGES = [
+  { id: 'roadmap', label: "Yo'l xaritasi" },
+  { id: 'auth', label: 'Kirish' },
+  { id: 'onboarding', label: "Usta ro'yxati" },
+  { id: 'referral', label: 'Referral' },
+  { id: 'b2b', label: 'Korporativ' },
+  { id: 'marketing', label: 'Marketing' },
+  { id: 'investors', label: 'Investorlar' },
+  { id: 'legal', label: 'Huquqiy' },
+  { id: 'admin', label: 'Admin' },
+];
+
+const API_BASE = (() => {
+  if (window.location.protocol === 'file:') return 'http://localhost:3001';
+  return window.location.origin;
+})();
+const API_URL = API_BASE + '/api';
+const WS_URL = (API_BASE.startsWith('https') ? 'wss' : 'ws') + '://' + API_BASE.replace(/^https?:\/\//, '') + '/ws';
+
+const ROADMAP_PHASES = [
+  {
+    phase: 1, months: '1–2 oy', title: 'Poydevor', goal: 'Kompaniya + backend', revenue: '$0',
+    color: 'brand',
+    tasks: [
+      { id: 'p1-1', text: "MChJ ro'yxatdan o'tkazish (yuridik shaxs)", critical: true },
+      { id: 'p1-2', text: 'ustabazar.uz domenini sotib olish', critical: true },
+      { id: 'p1-3', text: 'Backend API ishga tushirish (Node.js)', critical: true },
+      { id: 'p1-4', text: "Ma'lumotlar bazasi (PostgreSQL)", critical: true },
+      { id: 'p1-5', text: 'Serverga deploy (VPS / Railway)', critical: true },
+      { id: 'p1-6', text: 'JWT autentifikatsiya — haqiqiy kirish', critical: true },
+      { id: 'p1-7', text: 'Telegram bot — buyurtma bildirishnomalari' },
+    ],
+  },
+  {
+    phase: 2, months: '2–4 oy', title: 'Mahsulot', goal: 'To\'lov + chat ishlaydi', revenue: '$500/oy',
+    color: 'blue',
+    tasks: [
+      { id: 'p2-1', text: 'Payme API integratsiyasi', critical: true },
+      { id: 'p2-2', text: 'Click API integratsiyasi', critical: true },
+      { id: 'p2-3', text: 'Escrow to\'lov oqimi (ish tugaguncha)', critical: true },
+      { id: 'p2-4', text: 'Real vaqt chat (WebSocket)', critical: true },
+      { id: 'p2-5', text: 'GPS — usta joylashuvi' },
+      { id: 'p2-6', text: 'PWA — telefonga o\'rnatish' },
+      { id: 'p2-7', text: 'Push bildirishnomalar' },
+      { id: 'p2-8', text: 'MyID — usta hujjat tekshiruvi' },
+    ],
+  },
+  {
+    phase: 3, months: '3–6 oy', title: 'Toshkent pilot', goal: '50 usta, 200 buyurtma', revenue: '$2K/oy',
+    color: 'emerald',
+    tasks: [
+      { id: 'p3-1', text: '50 ta haqiqiy usta jalb qilish', critical: true },
+      { id: 'p3-2', text: '200 ta haqiqiy buyurtma', critical: true },
+      { id: 'p3-3', text: 'Instagram + Telegram marketing', critical: true },
+      { id: 'p3-4', text: 'Referral: do\'stini olib kel — bonus' },
+      { id: 'p3-5', text: 'Birinchi B2B mijoz (mehmonxona/ofis)' },
+      { id: 'p3-6', text: 'Usta onboarding — haqiqiy imtihon' },
+      { id: 'p3-7', text: 'Mijozlar uchun 30 kun kafolat jarayoni' },
+    ],
+  },
+  {
+    phase: 4, months: '6–9 oy', title: "O'sish", goal: '3 shahar, 500 usta', revenue: '$5K/oy',
+    color: 'purple',
+    tasks: [
+      { id: 'p4-1', text: 'Samarqand + Andijon ishga tushirish', critical: true },
+      { id: 'p4-2', text: '500+ ro\'yxatdagi usta', critical: true },
+      { id: 'p4-3', text: 'iOS mobil ilova (beta)' },
+      { id: 'p4-4', text: 'Android mobil ilova (beta)' },
+      { id: 'p4-5', text: '2 kishilik jamoa yollash (dev + marketing)' },
+      { id: 'p4-6', text: 'Usta premium obuna modeli' },
+      { id: 'p4-7', text: 'Korporativ B2B savdo boshlash' },
+    ],
+  },
+  {
+    phase: 5, months: '9–12 oy', title: 'Masshtab', goal: '5 shahar, $10K/oy', revenue: '$10K/oy',
+    color: 'amber',
+    tasks: [
+      { id: 'p5-1', text: '5 shahar: +Farg\'ona, Buxoro, Namangan', critical: true },
+      { id: 'p5-2', text: '2 000+ faol usta', critical: true },
+      { id: 'p5-3', text: 'Oyiga $10,000+ platforma daromadi', critical: true },
+      { id: 'p5-4', text: 'B2B: 10+ korporativ shartnoma' },
+      { id: 'p5-5', text: 'Nizolar hal qilish tizimi' },
+      { id: 'p5-6', text: 'Moliyaviy hisobotlar (auditga tayyor)' },
+      { id: 'p5-7', text: 'Tovar belgisi (trademark) tasdiqlangan' },
+    ],
+  },
+  {
+    phase: 6, months: '12–18 oy', title: '$500K+ chiqish', goal: 'Sotish yoki Series A', revenue: '$20K+/oy',
+    color: 'red',
+    tasks: [
+      { id: 'p6-1', text: 'Yillik $250K+ daromad (ARR)', critical: true },
+      { id: 'p6-2', text: '5 000+ usta, 80 000+ buyurtma/yil', critical: true },
+      { id: 'p6-3', text: '12 shahar — butun O\'zbekiston', critical: true },
+      { id: 'p6-4', text: 'Investor pitch + data room tayyor' },
+      { id: 'p6-5', text: '5–10 potensial xaridor/investor bilan uchrashuv' },
+      { id: 'p6-6', text: '$500K–$800K sotish yoki $300K investitsiya' },
+      { id: 'p6-7', text: 'Yoki: o\'zimiz davom — $1M+ qiymatga' },
+    ],
+  },
+];
+
+const PAGES = [...MAIN_PAGES, ...MVP_PAGES];
+
+const FINANCIALS = [
+  { year: '2026', masters: 500, orders: '5 000', gmv: '$120K', revenue: '$15K', margin: '12.5%' },
+  { year: '2027', masters: '2 000', orders: '25 000', gmv: '$600K', revenue: '$75K', margin: '12.5%' },
+  { year: '2028', masters: '5 000', orders: '80 000', gmv: '$2M', revenue: '$250K', margin: '12.5%' },
+];
+
+const B2B_PACKAGES = [
+  { name: 'Start', price: '2 500 000', unit: "so'm/oy", desc: 'Kichik ofis — 5 ta xizmatgacha', features: ['5 xizmat/oy', '1 usta', 'Chat qo\'llab-quvvat', 'Escrow to\'lov'] },
+  { name: 'Business', price: '8 000 000', unit: "so'm/oy", desc: 'O\'rta biznes — mehmonxona, restoran', features: ['20 xizmat/oy', '3 ustaga qadar', '24/7 qo\'llab-quvvat', 'Shaxsiy menejer', 'Hisobotlar'], popular: true },
+  { name: 'Enterprise', price: 'Kelishiladi', unit: '', desc: 'Yirik kompaniyalar — zavod, savdo markazi', features: ['Cheksiz xizmat', 'SLA shartnoma', 'API integratsiya', 'Oylik hisobot', 'Maxsus narx'] },
+];
+
+const STATUS_LABELS = {
+  pending: 'Kutilmoqda',
+  in_progress: 'Jarayonda',
+  completed: 'Bajarildi',
+  disputed: 'Nizoli',
+  active: 'Faol',
+  suspended: "To'xtatilgan",
+};
+
+const ROLE_LABELS = { customer: 'Mijoz', master: 'Usta' };
+
+const TAB_LABELS = { orders: 'Buyurtmalar', schedule: 'Jadval', analytics: 'Statistika' };
+
+const ADMIN_SECTION_LABELS = { overview: 'Umumiy', users: 'Foydalanuvchilar', orders: 'Buyurtmalar', disputes: 'Nizolar' };
+
+const DAYS = ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'];
+
+const CITIES = [
+  { name: 'Toshkent', masters: 1240, active: true },
+  { name: 'Samarqand', masters: 312, active: true },
+  { name: 'Buxoro', masters: 198, active: true },
+  { name: 'Andijon', masters: 245, active: true },
+  { name: 'Farg\'ona', masters: 221, active: true },
+  { name: 'Namangan', masters: 187, active: true },
+  { name: 'Nukus', masters: 94, active: true },
+  { name: 'Qarshi', masters: 156, active: true },
+  { name: 'Navoiy', masters: 88, active: true },
+  { name: 'Urganch', masters: 134, active: true },
+  { name: 'Jizzax', masters: 76, active: true },
+  { name: 'Termiz', masters: 102, active: true },
+];
+
+const ADVANTAGES = [
+  { icon: '🛡️', title: 'Escrow himoya', desc: "Pul ish tugaguncha platformada saqlanadi. Siz tasdiqlaguningizcha usta pul olmaydi." },
+  { icon: '✅', title: '3 bosqichli tekshiruv', desc: "Har bir usta hujjat, tajriba va amaliy imtihondan o'tadi. Faqat 42% qabul qilinadi." },
+  { icon: '⚡', title: '15 daqiqada javob', desc: "O'rtacha javob vaqti — 15 daqiqa. Favqulodda xizmat 24/7 mavjud." },
+  { icon: '💳', title: "O'zbek to'lovlari", desc: "Payme, Click, Uzcard, Humo — barcha mahalliy to'lov tizimlari qo'llab-quvvatlanadi." },
+  { icon: '📱', title: 'Mobil ilova', desc: "iOS va Android ilovasi orqali usta toping, chat qiling va to'lov qiling — yo'lda ham." },
+  { icon: '🏆', title: 'Ish kafolati', desc: "Har bir buyurtmaga 30 kunlik ish kafolati. Muammo bo'lsa — bepul qayta bajariladi." },
+  { icon: '🎁', title: 'Sadoqat ballari', desc: "Har buyurtmada ball to'plang — 500 ball = 50 000 so'm chegirma. Doimiy mijozlar uchun maxsus bonuslar." },
+  { icon: '🔍', title: 'Shaffof narx', desc: "Narx kalkulyatori va ustalarning aniq narxlari — yashirin to'lovlar yo'q, oldindan bilasiz." },
+  { icon: '🤝', title: 'Referral bonus', desc: "Do'stingizni taklif qiling — ikkalangiz ham 50 000 so'm bonus olasiz. O'sish sizning qo'lingizda." },
+];
+
+const COMPARE_ROWS = [
+  { feature: 'Usta tekshiruvi', us: '3 bosqichli', them: "Yo'q / tasodifiy" },
+  { feature: "To'lov xavfsizligi", us: 'Escrow himoya', them: 'Naqd, riskli' },
+  { feature: 'Ish kafolati', us: '30 kun', them: "Ko'pincha yo'q" },
+  { feature: 'Javob vaqti', us: '~15 daqiqa', them: 'Soatlar / kunlar' },
+  { feature: 'Sharhlar va reyting', us: 'Haqiqiy, tekshirilgan', them: 'Ishonchsiz' },
+  { feature: 'Narx shaffofligi', us: 'Oldindan ko\'rinadi', them: 'Kelishiladi, noaniq' },
+  { feature: 'Favqulodda 24/7', us: 'Mavjud', them: 'Qiyin topish' },
+  { feature: 'Chat va kuzatuv', us: 'Ilova ichida', them: 'Telefon qo\'ng\'irog\'i' },
+];
+
+const PRICE_SERVICES = [
+  { id: 'pipe', name: 'Quvur oqishini tuzatish', base: 120000, unit: 'ish' },
+  { id: 'electric', name: 'Elektr rozetka o\'rnatish', base: 80000, unit: 'nuqta' },
+  { id: 'paint', name: 'Xona bo\'yoq', base: 45000, unit: 'm²' },
+  { id: 'clean', name: 'Uy tozalash', base: 150000, unit: 'xona' },
+  { id: 'ac', name: 'Konditsioner o\'rnatish', base: 350000, unit: 'dona' },
+  { id: 'furniture', name: 'Mebel yig\'ish', base: 200000, unit: 'komplekt' },
+];
+
+const DEFAULT_NOTIFS = [
+  { id: 1, text: 'Jamshid K. buyurtmangizni qabul qildi', time: '2 daq oldin', read: false },
+  { id: 2, text: 'Yangi usta Toshkentda qo\'shildi — Elektrik', time: '1 soat oldin', read: false },
+  { id: 3, text: 'Referral bonus: do\'stingiz ro\'yxatdan o\'tdi!', time: 'Kecha', read: true },
+];
+
+const TESTIMONIALS = [
+  { name: 'Dilnoza Karimova', city: 'Toshkent', text: "Uyimda favqulodda oqish bo'ldi — 20 daqiqada usta keldi. Boshqa joylarda soatlar kutganman!", rating: 5, service: 'Santexnik' },
+  { name: 'Bobur Nazarov', city: 'Samarqand', text: "Escrow tizimi juda qulay. Ish tugamasidan oldin pul bermadim — xotirjam bo'ldim.", rating: 5, service: 'Elektrik' },
+  { name: 'Malika Toshmatova', city: 'Andijon', text: "Usta reytinglari haqiqiy ekan. Tanlagan bo'yoqchim aynan shunday professional chiqdi.", rating: 5, service: "Bo'yoqchi" },
+  { name: 'Rustam Aliyev', city: 'Farg\'ona', text: "Usta sifatida ro'yxatdan o'tdim — birinchi oyda 4 mln so'm topdim. Mijozlar o'zi keladi!", rating: 5, service: 'Usta' },
+];
+
+const FAQ = [
+  { q: "Usta qanday tekshiriladi?", a: "Har bir usta 3 bosqichdan o'tadi: shaxsiy hujjatlar tekshiruvi, kasbiy tajriba va amaliy sinov. Faqat eng yaxshi 42% platformaga qabul qilinadi." },
+  { q: "To'lov qachon amalga oshiriladi?", a: "To'lov escrow tizimida saqlanadi. Ish tugagach siz tasdiqlaysiz — shundan keyin pul ustaga o'tkaziladi. Muammo bo'lsa, pul qaytariladi." },
+  { q: "Favqulodda xizmat bormi?", a: "Ha! 24/7 favqulodda xizmat mavjud — santexnik oqishi, elektr muammosi, qulf ochish va boshqalar. O'rtacha kelish vaqti — 30 daqiqa." },
+  { q: "Qaysi shaharlarda ishlaydi?", a: "Hozirda 12 ta shaharda faol xizmat ko'rsatamiz. 2026-yil oxirigacha barcha 14 viloyat markazlarini qamrab olamiz." },
+  { q: "Usta bo'lish uchun nima kerak?", a: "Ro'yxatdan o'ting, hujjatlaringizni yuklang va onlayn imtihondan o'ting. Tasdiqlangach — buyurtmalar o'zingizga keladi. Ro'yxatdan o'tish bepul." },
+];
+
+const LIVE_FEED = [
+  'Sardor K. Toshkentda santexnik buyurtma qildi',
+  'Malika T. Samarqandda tozalash xizmati oldi',
+  'Jamshid K. 5 yulduzli sharh oldi',
+  'Bobur N. suv isitgich o\'rnatishni buyurtma qildi',
+  'Farida T. Andijonda usta topdi — 12 daqiqada',
+  'Zarina H. hammom ta\'mirlash uchun to\'ladi',
+];
+
+const TOP_MASTERS = [
+  { name: 'Abdulloh Karimov', job: 'Elektrik usta', rating: 4.9, reviews: 127, price: '50 000', dist: '1.2 km', area: 'Yunusobod', initials: 'AK', color: 'bg-emerald-100 text-emerald-800' },
+  { name: 'Sanjar Rahimov', job: 'Santexnik', rating: 4.8, reviews: 89, price: '45 000', dist: '0.8 km', area: 'Chilonzor', initials: 'SR', color: 'bg-amber-100 text-amber-800' },
+  { name: 'Farida Toshmatova', job: 'Tozalash xizmati', rating: 4.9, reviews: 201, price: '35 000', dist: '1.5 km', area: "Mirzo Ulug'bek", initials: 'FT', color: 'bg-rose-100 text-rose-800' },
+];
+
+/* ─── Helpers ─── */
+const fmt = (n) => (Number(n) || 0).toLocaleString('uz-UZ') + " so'm";
+const parsePrice = (s) => parseInt(String(s).replace(/\s/g, ''), 10) || 0;
+const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const normalizePhone = (phone) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length === 9) return '+998' + digits;
+  if (digits.startsWith('998') && digits.length === 12) return '+' + digits;
+  return '+' + digits;
+};
+
+function mapApiMessage(m, userRole) {
+  const mine = m.from_role === userRole;
+  return { id: m.id, from: mine ? 'user' : 'master', text: m.text, time: fmtTime(m.created_at) };
+}
+
+function orderStepIndex(status) {
+  if (status === 'pending') return 0;
+  if (status === 'in_progress') return 2;
+  if (status === 'completed') return 3;
+  if (status === 'disputed') return 2;
+  return 0;
+}
+
+async function api(path, opts = {}, token) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await fetch(API_URL + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'API xato');
+  return data;
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribePush(token) {
+  if (!('PushManager' in window) || !token) throw new Error('Push qo\'llab-quvvatlanmaydi yoki kirish kerak');
+  const reg = await navigator.serviceWorker.ready;
+  const { publicKey } = await api('/push/vapid-public');
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+  }
+  await api('/push/subscribe', { method: 'POST', body: JSON.stringify(sub.toJSON()) }, token);
+}
+
+function PushButton({ token }) {
+  const [state, setState] = useState('idle');
+  const enable = async () => {
+    setState('loading');
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') throw new Error('Ruxsat berilmadi');
+      await subscribePush(token);
+      setState('on');
+    } catch (e) {
+      setState('err');
+      alert(e.message || 'Push yoqilmadi');
+    }
+  };
+  if (!token) return null;
+  return (
+    <button onClick={enable} disabled={state === 'loading' || state === 'on'}
+      className="hidden sm:inline-flex px-2.5 py-2 rounded-lg text-xs font-medium text-ink-600 hover:bg-ink-100"
+      title="Push bildirishnomalar">
+      {state === 'on' ? '🔔 On' : state === 'loading' ? '...' : '🔔 Push'}
+    </button>
+  );
+}
+
+function masterAvatar(name) {
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || 'Usta')}&backgroundColor=f97316`;
+}
+
+function NotificationBell({ wsEvent }) {
+  const [open, setOpen] = useState(false);
+  const [notes, setNotes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ub_notifs')) || DEFAULT_NOTIFS; } catch { return DEFAULT_NOTIFS; }
+  });
+  useEffect(() => {
+    if (!wsEvent) return;
+    try { setNotes(JSON.parse(localStorage.getItem('ub_notifs')) || DEFAULT_NOTIFS); } catch {}
+  }, [wsEvent?._t]);
+  const unread = notes.filter(n => !n.read).length;
+  const markAll = () => {
+    const next = notes.map(n => ({ ...n, read: true }));
+    setNotes(next);
+    localStorage.setItem('ub_notifs', JSON.stringify(next));
+  };
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="relative p-2 rounded-xl hover:bg-ink-100 transition-colors" title="Bildirishnomalar">
+        <span className="text-lg">🔔</span>
+        {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unread}</span>}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-ink-200 shadow-xl z-50 overflow-hidden">
+          <div className="flex justify-between items-center px-4 py-3 border-b border-ink-100">
+            <span className="font-semibold text-sm">Bildirishnomalar</span>
+            {unread > 0 && <button onClick={markAll} className="text-xs text-brand-600 hover:underline">Hammasini o'qilgan</button>}
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {notes.map(n => (
+              <div key={n.id} className={`px-4 py-3 border-b border-ink-50 text-sm ${n.read ? 'text-ink-400' : 'text-ink-800 bg-brand-50/50'}`}>
+                <p>{n.text}</p>
+                <p className="text-[10px] text-ink-400 mt-1">{n.time}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PriceCalculator() {
+  const [service, setService] = useState(PRICE_SERVICES[0].id);
+  const [qty, setQty] = useState(1);
+  const [urgent, setUrgent] = useState(false);
+  const svc = PRICE_SERVICES.find(s => s.id === service);
+  const base = (svc?.base || 0) * Math.max(1, qty);
+  const fee = Math.round(base * 0.1);
+  const urgentFee = urgent ? Math.round(base * 0.25) : 0;
+  const total = base + fee + urgentFee;
+  return (
+    <div className="bg-white rounded-2xl border border-ink-100 p-6 card-hover">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-2xl">🧮</span>
+        <h3 className="font-display font-bold text-lg">Narx kalkulyatori</h3>
+      </div>
+      <p className="text-xs text-ink-500 mb-4">Taxminiy narx — aniq summa usta bilan kelishiladi</p>
+      <div className="space-y-3">
+        <select value={service} onChange={e => setService(e.target.value)} className="w-full px-4 py-2.5 border border-ink-200 rounded-xl text-sm">
+          {PRICE_SERVICES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <div className="flex gap-3">
+          <input type="number" min="1" max="50" value={qty} onChange={e => setQty(+e.target.value || 1)}
+            className="flex-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm" placeholder="Miqdor" />
+          <span className="px-3 py-2.5 bg-ink-50 rounded-xl text-sm text-ink-500">{svc?.unit}</span>
+        </div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" checked={urgent} onChange={e => setUrgent(e.target.checked)} className="rounded" />
+          Favqulodda (+25%)
+        </label>
+        <div className="bg-brand-50 rounded-xl p-4 space-y-1 text-sm">
+          <div className="flex justify-between"><span className="text-ink-500">Xizmat</span><span>{fmt(base)}</span></div>
+          <div className="flex justify-between"><span className="text-ink-500">Platforma (10%)</span><span>{fmt(fee)}</span></div>
+          {urgent && <div className="flex justify-between"><span className="text-ink-500">Favqulodda</span><span>{fmt(urgentFee)}</span></div>}
+          <div className="flex justify-between font-bold text-base pt-2 border-t border-brand-100"><span>Jami taxmin</span><span className="text-brand-600">{fmt(total)}</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompareSection() {
+  return (
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+      <div className="text-center mb-10">
+        <span className="text-xs font-bold text-emerald-600 tracking-widest uppercase">Nima uchun biz yaxshiroqmiz?</span>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold mt-2">Usta Bazar vs an'anaviy usul</h2>
+        <p className="text-ink-500 text-sm mt-2">Telegram guruhi yoki tanish orqali emas — professional platforma</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden shadow-sm">
+        <div className="grid grid-cols-3 bg-ink-900 text-white text-sm font-semibold">
+          <div className="p-4">Xususiyat</div>
+          <div className="p-4 text-center text-brand-300">✓ Usta Bazar</div>
+          <div className="p-4 text-center text-ink-400">An'anaviy</div>
+        </div>
+        {COMPARE_ROWS.map((r, i) => (
+          <div key={i} className={`grid grid-cols-3 text-sm border-t border-ink-100 ${i % 2 ? 'bg-ink-50/50' : ''}`}>
+            <div className="p-4 font-medium text-ink-700">{r.feature}</div>
+            <div className="p-4 text-center text-emerald-700 font-medium">{r.us}</div>
+            <div className="p-4 text-center text-ink-400">{r.them}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MapPage({ setPage, setSelectedMaster, filter }) {
+  const mapRef = useRef(null);
+  const mapInst = useRef(null);
+  const [masters, setMasters] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filter?.city) params.set('city', filter.city);
+    api('/masters/map?' + params).then(setMasters).catch(() => setMasters([])).finally(() => setLoading(false));
+  }, [filter?.city]);
+
+  useEffect(() => {
+    if (!mapRef.current || !window.L || loading) return;
+    if (mapInst.current) { mapInst.current.remove(); mapInst.current = null; }
+    const center = masters[0] ? [masters[0].lat, masters[0].lng] : [41.2995, 69.2401];
+    const map = window.L.map(mapRef.current).setView(center, 11);
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap',
+    }).addTo(map);
+    masters.forEach(m => {
+      const marker = window.L.marker([m.lat, m.lng]).addTo(map);
+      marker.bindPopup(`<b>${m.name}</b><br>${m.title}<br>⭐ ${m.rating}<br>${m.city}`);
+      marker.on('click', () => {
+        if (setSelectedMaster) setSelectedMaster(m);
+        setPage('profile');
+      });
+    });
+    if (masters.length > 1) {
+      const bounds = window.L.latLngBounds(masters.map(m => [m.lat, m.lng]));
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+    mapInst.current = map;
+    return () => { if (mapInst.current) { mapInst.current.remove(); mapInst.current = null; } };
+  }, [masters, loading, setPage, setSelectedMaster]);
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold">GPS xarita</h1>
+          <p className="text-ink-500 text-sm mt-1">{loading ? 'Yuklanmoqda...' : masters.length + ' ta usta xaritada'}</p>
+        </div>
+        <button onClick={() => setPage('masters')} className="px-4 py-2 border border-ink-200 text-sm font-medium rounded-xl hover:bg-ink-50">← Ro'yxat</button>
+      </div>
+      <div ref={mapRef} className="w-full h-[420px] sm:h-[520px] rounded-2xl border border-ink-200 overflow-hidden shadow-sm z-0" />
+      <p className="text-xs text-ink-400 mt-3 text-center">Marker ustiga bosing — usta profiliga o'tasiz</p>
+    </div>
+  );
+}
+
+function MastersListPage({ setPage, filter, setFilter, setSelectedMaster }) {
+  const [masters, setMasters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filter.city) params.set('city', filter.city);
+    if (filter.q) params.set('q', filter.q);
+    if (filter.category) params.set('category', filter.category);
+    api('/masters?' + params).then(setMasters).catch(() => setError('API ulanmagan — START.bat ni ishga tushiring')).finally(() => setLoading(false));
+  }, [filter.city, filter.q, filter.category]);
+
+  const openProfile = (m) => {
+    if (setSelectedMaster) setSelectedMaster(m);
+    setPage('profile');
+  };
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold">Ustalarni qidirish</h1>
+        <button onClick={() => setPage('map')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl">📍 GPS xarita</button>
+      </div>
+      <p className="text-ink-500 text-sm mb-6">API orqali jonli ro'yxat — {loading ? '...' : masters.length + ' ta usta topildi'}</p>
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <select value={filter.city} onChange={e => setFilter(f => ({ ...f, city: e.target.value }))}
+          className="px-4 py-2.5 bg-white border border-ink-200 rounded-xl text-sm">
+          <option value="">Barcha shaharlar</option>
+          {CITIES.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+        </select>
+        <input value={filter.q} onChange={e => setFilter(f => ({ ...f, q: e.target.value }))}
+          placeholder="Santexnik, elektrik..." className="flex-1 min-w-[180px] px-4 py-2.5 bg-white border border-ink-200 rounded-xl text-sm" />
+        <button onClick={() => setFilter({ city: 'Toshkent', q: '', category: '' })} className="px-4 py-2.5 text-sm text-ink-500 hover:bg-ink-100 rounded-xl">Tozalash</button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        <button onClick={() => setFilter(f => ({ ...f, category: '' }))}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium ${!filter.category ? 'bg-brand-500 text-white' : 'bg-ink-100 text-ink-600'}`}>Hammasi</button>
+        {CATEGORIES.map(c => (
+          <button key={c.id} onClick={() => setFilter(f => ({ ...f, category: c.name }))}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium ${filter.category === c.name ? 'bg-brand-500 text-white' : 'bg-ink-100 text-ink-600'}`}>
+            {c.icon} {c.name}
+          </button>
+        ))}
+      </div>
+
+      {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>}
+
+      {loading ? (
+        <div className="text-center py-16 text-ink-400">Yuklanmoqda...</div>
+      ) : masters.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-ink-100">
+          <div className="text-4xl mb-3">🔍</div>
+          <p className="text-ink-500">Usta topilmadi. Boshqa shahar yoki kategoriya sinab ko'ring.</p>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {masters.map(m => (
+            <div key={m.id} className="card-hover bg-white rounded-2xl border border-ink-100 p-5">
+              <div className="flex items-start gap-3 mb-3">
+                <img src={masterAvatar(m.name)} alt="" className="w-12 h-12 rounded-xl bg-brand-50" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">{m.name}</div>
+                  <div className="text-sm text-ink-500">{m.title}</div>
+                  <div className="flex items-center gap-1 mt-1"><StarRating rating={m.rating} /><span className="text-xs font-semibold">{m.rating}</span></div>
+                </div>
+                {m.verified ? <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full shrink-0">✓</span> : null}
+              </div>
+              <p className="text-xs text-ink-400 mb-3 line-clamp-2">{m.bio}</p>
+              <div className="flex items-center justify-between text-xs text-ink-400 mb-3">
+                <span>📍 {m.city}</span>
+                <span>{m.category || 'Umumiy'}</span>
+              </div>
+              <button onClick={() => openProfile(m)} className="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition-colors">
+                Profil va buyurtma
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const statusBadge = (status) => {
+  const map = {
+    pending: 'bg-amber-100 text-amber-800',
+    in_progress: 'bg-blue-100 text-blue-800',
+    completed: 'bg-emerald-100 text-emerald-800',
+    disputed: 'bg-red-100 text-red-800',
+    active: 'bg-emerald-100 text-emerald-800',
+    suspended: 'bg-red-100 text-red-800',
+  };
+  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${map[status] || 'bg-ink-100 text-ink-600'}`}>{STATUS_LABELS[status] || status}</span>;
+};
+
+const Icon = ({ d, className = 'w-5 h-5' }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+  </svg>
+);
+
+/* ─── Shared Components ─── */
+function AnnouncementBar() {
+  return (
+    <div className="bg-ink-900 text-white text-xs sm:text-sm">
+      <div className="uz-gradient"></div>
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2 text-center">
+        <span className="bg-brand-500 text-white px-2 py-0.5 rounded font-bold text-[10px] sm:text-xs">18 OY REJA</span>
+        <span>Maqsad <strong>$500K+</strong> — navigatsiyadan <strong>Yo'l xaritasi</strong> ni oching va boshlang</span>
+      </div>
+    </div>
+  );
+}
+
+function LiveTicker() {
+  const items = [...LIVE_FEED, ...LIVE_FEED];
+  return (
+    <div className="bg-brand-50 border-y border-brand-100 overflow-hidden py-2.5">
+      <div className="marquee-track gap-8 px-4">
+        {items.map((t,i) => (
+          <span key={i} className="flex items-center gap-2 text-sm text-brand-800 whitespace-nowrap">
+            <span className="status-dot bg-emerald-500"></span>{t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TrustStrip() {
+  const partners = ['Payme', 'Click', 'Uzcard', 'Humo', 'Escrow', 'MyID'];
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 py-8 opacity-80">
+      {partners.map(p => (
+        <div key={p} className="flex items-center gap-2 text-ink-500 font-semibold text-sm">
+          <span className="w-8 h-8 rounded-lg bg-ink-100 flex items-center justify-center text-xs font-bold text-ink-600">{p[0]}</span>
+          {p}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FAQSection() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+      <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-2">Ko'p so'raladigan savollar</h2>
+      <p className="text-ink-500 text-center mb-10 text-sm">Barcha savollaringizga javob</p>
+      <div className="space-y-3">
+        {FAQ.map((f,i) => (
+          <div key={i} className="bg-white rounded-2xl border border-ink-100 overflow-hidden">
+            <button onClick={() => setOpen(open === i ? -1 : i)} className="w-full flex items-center justify-between p-5 text-left font-semibold text-sm hover:bg-ink-50 transition-colors">
+              {f.q}
+              <span className="text-brand-500 text-xl ml-4 shrink-0">{open === i ? '−' : '+'}</span>
+            </button>
+            {open === i && <div className="px-5 pb-5 text-sm text-ink-500 leading-relaxed border-t border-ink-50 pt-4">{f.a}</div>}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ApiStatus() {
+  const [status, setStatus] = useState('checking');
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    api('/health').then(d => { setStatus('online'); setStats(d); }).catch(() => setStatus('offline'));
+  }, []);
+  if (status === 'checking') return null;
+  return (
+    <div className={`text-center py-1 text-[10px] font-medium ${status === 'online' ? 'bg-emerald-600 text-white' : 'bg-red-500 text-white'}`}>
+      {status === 'online'
+        ? <>🟢 API v{stats?.version} onlayn — WebSocket + Auth + To'lov stub faol</>
+        : <>🔴 API offline — START.bat ni ishga tushiring (port 3001)</>}
+    </div>
+  );
+}
+
+function EmergencyFAB({ setPage }) {
+  return (
+    <button onClick={() => setPage('order')} title="Favqulodda xizmat"
+      className="fixed bottom-6 right-6 z-50 sos-pulse bg-red-500 hover:bg-red-600 text-white w-14 h-14 rounded-full shadow-xl flex flex-col items-center justify-center text-[9px] font-bold leading-tight transition-colors">
+      <span className="text-lg">🆘</span>SOS
+    </button>
+  );
+}
+
+function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
+  return (
+    <header className="sticky top-0 z-50">
+      <AnnouncementBar />
+      <ApiStatus />
+      <div className="glass border-b border-ink-200/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <button onClick={() => setPage('landing')} className="flex items-center gap-2.5 group shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center text-white font-display font-bold text-lg shadow-lg shadow-brand-500/25">U</div>
+              <span className="font-display font-bold text-xl text-ink-900 hidden sm:inline">Usta <span className="text-brand-600">Bazar</span></span>
+            </button>
+            <nav className="hidden xl:flex items-center gap-0.5">
+              {MAIN_PAGES.map(p => (
+                <button key={p.id} onClick={() => setPage(p.id)}
+                  className={`px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${page === p.id ? 'bg-brand-100 text-brand-700' : 'text-ink-600 hover:bg-ink-100'}`}>
+                  {p.label}
+                </button>
+              ))}
+              <span className="w-px h-5 bg-ink-200 mx-1"></span>
+              {MVP_PAGES.map(p => (
+                <button key={p.id} onClick={() => setPage(p.id)}
+                  className={`px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-emerald-100 text-emerald-700' : 'text-ink-500 hover:bg-ink-100'}`}>
+                  {p.label}
+                </button>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2">
+              <PushButton token={token} />
+              <NotificationBell wsEvent={wsEvent} />
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="text-xs text-ink-500">{user.name}</span>
+                  <button onClick={onLogout} className="text-xs text-ink-400 hover:text-ink-600">Chiqish</button>
+                </div>
+              ) : (
+                <button onClick={() => setPage('auth')} className="hidden sm:inline-flex px-4 py-2 border border-ink-200 text-sm font-medium rounded-xl hover:bg-ink-50 transition-colors">Kirish</button>
+              )}
+              <button onClick={() => setPage('investors')} className="hidden md:inline-flex px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
+                💼 Investorlar
+              </button>
+              <button onClick={() => setPage('order')} className="hidden sm:inline-flex px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition-colors">🆘</button>
+              <select value={page} onChange={e => setPage(e.target.value)} className="xl:hidden text-sm border border-ink-200 rounded-lg px-2 py-1.5 bg-white max-w-[130px]">
+                {PAGES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-ink-200 bg-ink-900 text-ink-300 mt-auto">
+      <div className="uz-gradient"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div>
+            <div className="font-display font-bold text-lg mb-2 text-white">Usta Bazar</div>
+            <p className="text-sm leading-relaxed">O'zbekistonning #1 uy xizmatlari platformasi. 12 shahar, 1 240+ tasdiqlangan usta.</p>
+            <div className="flex gap-3 mt-4">
+              {['📱','📧','📞'].map((ic,i) => (
+                <div key={i} className="w-9 h-9 rounded-lg bg-ink-800 flex items-center justify-center text-sm cursor-pointer hover:bg-ink-700 transition-colors">{ic}</div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="font-semibold text-sm mb-3 text-white">Mijozlar uchun</div>
+            <ul className="space-y-2 text-sm">
+              <li className="hover:text-white cursor-pointer">Usta topish</li>
+              <li className="hover:text-white cursor-pointer">Favqulodda xizmat</li>
+              <li className="hover:text-white cursor-pointer">Ish kafolati</li>
+              <li className="hover:text-white cursor-pointer">To'lov xavfsizligi</li>
+            </ul>
+          </div>
+          <div>
+            <div className="font-semibold text-sm mb-3 text-white">Ustalar uchun</div>
+            <ul className="space-y-2 text-sm">
+              <li className="hover:text-white cursor-pointer">Ro'yxatdan o'tish</li>
+              <li className="hover:text-white cursor-pointer">Usta paneli</li>
+              <li className="hover:text-white cursor-pointer">Korporativ B2B</li>
+              <li className="hover:text-white cursor-pointer">Investorlar</li>
+            </ul>
+          </div>
+          <div>
+            <div className="font-semibold text-sm mb-3 text-white">Aloqa</div>
+            <ul className="space-y-2 text-sm">
+              <li>📍 Toshkent, O'zbekiston</li>
+              <li>📞 +998 71 200 00 00</li>
+              <li>✉️ info@ustabazar.uz</li>
+              <li>🕐 24/7 qo'llab-quvvatlash</li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-10 pt-6 border-t border-ink-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-500">
+          <span>© 2026 Usta Bazar — O'zbekistonning eng ishonchli usta platformasi</span>
+          <span>Payme · Click · Uzcard · Humo · Escrow</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function StarRating({ rating, size = 'sm' }) {
+  const cls = size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} className={`${cls} ${i <= Math.round(rating) ? 'text-amber-400' : 'text-ink-200'}`} fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+/* ─── 1. Landing Page ─── */
+function LandingPage({ setPage, setMasterFilter }) {
+  const [city, setCity] = useState('Toshkent');
+  const [q, setQ] = useState('');
+  const goSearch = () => { setMasterFilter({ city, q, category: '' }); setPage('masters'); };
+  return (
+    <div className="page-enter">
+      <LiveTicker />
+      <section className="gradient-hero">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-100 text-brand-700 rounded-full text-sm font-medium mb-6">
+                <span className="status-dot bg-emerald-500"></span> O'zbekistonning #1 usta platformasi
+              </div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-ink-900 leading-tight">
+                Har qanday ish uchun to'g'ri <span className="text-brand-600">usta</span>
+              </h1>
+              <p className="mt-5 text-lg text-ink-500 max-w-lg">Ishonchli santexnik, elektrik, duradgor va boshqalarni toping. Chat qiling, buyurtmani kuzating va xavfsiz to'lang — hammasi bir joyda.</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <select value={city} onChange={e => setCity(e.target.value)} className="px-4 py-3 bg-white border border-ink-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-400/40">
+                  {CITIES.map(c => <option key={c.name}>{c.name}</option>)}
+                </select>
+                <input type="text" value={q} onChange={e => setQ(e.target.value)} placeholder="Santexnik, elektrik, bo'yoqchi..." className="flex-1 min-w-[200px] px-4 py-3 bg-white border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+                <button onClick={goSearch} className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all">Qidirish</button>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button onClick={() => { setMasterFilter({ city, q: '', category: '' }); setPage('masters'); }} className="px-6 py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl shadow-lg shadow-brand-500/25 transition-all">
+                  Ustalarni ko'rish
+                </button>
+                <button onClick={() => setPage('onboarding')} className="px-6 py-3.5 bg-white hover:bg-ink-50 text-ink-700 font-semibold rounded-xl border border-ink-200 transition-all">
+                  Usta bo'lish
+                </button>
+                <button onClick={() => setPage('auth')} className="px-6 py-3.5 bg-ink-900 hover:bg-ink-800 text-white font-semibold rounded-xl transition-all">
+                  Kirish
+                </button>
+              </div>
+              <div className="mt-10 flex items-center gap-6 text-sm text-ink-500">
+                <div><span className="font-bold text-ink-900 text-lg">4.8</span><br/>O'rtacha reyting</div>
+                <div className="w-px h-10 bg-ink-200"></div>
+                <div><span className="font-bold text-ink-900 text-lg">15 ming+</span><br/>Bajarilgan ish</div>
+                <div className="w-px h-10 bg-ink-200"></div>
+                <div><span className="font-bold text-ink-900 text-lg">98%</span><br/>Mamnunlik</div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-2xl shadow-ink-900/10 p-6 border border-ink-100">
+                <div className="flex items-center gap-4 mb-5">
+                  <img src={MASTER.avatar} alt="" className="w-14 h-14 rounded-xl bg-brand-50" />
+                  <div>
+                    <div className="font-semibold text-ink-900">{MASTER.name}</div>
+                    <div className="text-sm text-ink-500">{MASTER.title}</div>
+                    <div className="flex items-center gap-1 mt-0.5"><StarRating rating={MASTER.rating} /><span className="text-xs text-ink-500 ml-1">{MASTER.rating} ({MASTER.reviews})</span></div>
+                  </div>
+                  {MASTER.verified && <span className="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">✓ Tasdiqlangan</span>}
+                </div>
+                <div className="space-y-2">
+                  {MASTER.services.slice(0,2).map((s,i) => (
+                    <div key={i} className="flex justify-between items-center p-3 bg-ink-50 rounded-xl text-sm">
+                      <span>{s.name}</span><span className="font-semibold text-brand-600">{s.price} {s.unit}</span>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setPage('profile')} className="w-full mt-4 py-3 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 transition-colors">Profilni ko'rish va buyurtma</button>
+              </div>
+              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg px-4 py-3 border border-ink-100 text-sm">
+                <span className="text-emerald-600 font-semibold">● Hozir onlayn</span> — {MASTER.responseTime} ichida javob beradi
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <TrustStrip />
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-10">Mashhur xizmatlar</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {CATEGORIES.map(c => (
+            <button key={c.id} onClick={() => { setMasterFilter({ city: 'Toshkent', q: '', category: c.name }); setPage('masters'); }} className="card-hover bg-white rounded-2xl p-5 border border-ink-100 text-center">
+              <div className="text-3xl mb-2">{c.icon}</div>
+              <div className="font-semibold text-sm text-ink-800">{c.name}</div>
+              <div className="text-xs text-ink-400 mt-1">{c.count} usta</div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Top Masters */}
+      <section className="bg-white py-16 border-y border-ink-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold text-brand-600 tracking-widest uppercase">Eng yaxshilar</span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold mt-2">Top ustalar — bugun bo'sh</h2>
+            <p className="text-ink-500 text-sm mt-2">Reyting va sharhlar asosida tanlangan eng ishonchli mutaxassislar</p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {TOP_MASTERS.map((m,i) => (
+              <div key={i} className="card-hover bg-ink-50 rounded-2xl p-5 border border-ink-100">
+                <div className="flex justify-between items-start mb-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm ${m.color}`}>{m.initials}</div>
+                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium flex items-center gap-1"><span className="status-dot bg-emerald-500"></span>Bo'sh</span>
+                </div>
+                <div className="font-semibold">{m.name}</div>
+                <div className="text-sm text-ink-500 mb-2">{m.job}</div>
+                <div className="flex items-center gap-2 text-sm mb-3">
+                  <StarRating rating={m.rating} />
+                  <span className="font-semibold">{m.rating}</span>
+                  <span className="text-ink-400">({m.reviews} sharh)</span>
+                </div>
+                <div className="text-xs text-ink-400 mb-3">📍 {m.dist} · {m.area}</div>
+                <div className="flex justify-between items-center pt-3 border-t border-ink-200">
+                  <span className="font-bold text-brand-600">{m.price} <span className="text-xs font-normal text-ink-400">so'm/soat</span></span>
+                  <button onClick={() => setPage('profile')} className="px-4 py-2 bg-brand-500 text-white text-xs font-semibold rounded-lg hover:bg-brand-600 transition-colors">Buyurtma</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Cities */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <div className="text-center mb-10">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold">Butun O'zbekiston bo'ylab</h2>
+          <p className="text-ink-500 mt-2 text-sm">12 ta shaharda faol xizmat — 2026-yil oxirigacha 14 viloyat</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {CITIES.map(c => (
+            <button key={c.name} onClick={() => setPage('profile')} className="card-hover flex items-center justify-between p-4 bg-white rounded-xl border border-ink-100 text-left">
+              <div>
+                <div className="font-semibold text-sm">{c.name}</div>
+                <div className="text-xs text-ink-400">{c.masters} usta</div>
+              </div>
+              <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Faol</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Price Calculator */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          <div>
+            <span className="text-xs font-bold text-brand-600 tracking-widest uppercase">Shaffof narx</span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold mt-2 mb-4">Qancha turadi — oldindan bilasiz</h2>
+            <p className="text-ink-500 text-sm leading-relaxed mb-4">Yashirin to'lovlar yo'q. Kalkulyator taxminiy narxni ko'rsatadi, aniq summa usta bilan chatda kelishiladi. Escrow himoya bilan xavfsiz to'lang.</p>
+            <button onClick={goSearch} className="px-6 py-3 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 transition-colors">Usta topish →</button>
+          </div>
+          <PriceCalculator />
+        </div>
+      </section>
+
+      <CompareSection />
+
+      {/* Why #1 */}
+      <section className="bg-gradient-to-br from-brand-50 to-white py-16 border-y border-brand-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold text-brand-600 tracking-widest uppercase">Nima uchun biz?</span>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold mt-2">O'zbekistonda #1 bo'lishimizning sabablari</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {ADVANTAGES.map((a,i) => (
+              <div key={i} className="card-hover bg-white rounded-2xl p-6 border border-ink-100">
+                <div className="text-3xl mb-3">{a.icon}</div>
+                <h3 className="font-display font-bold text-lg mb-2">{a.title}</h3>
+                <p className="text-sm text-ink-500 leading-relaxed">{a.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Emergency Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-3xl p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-white">
+          <div>
+            <div className="text-red-200 text-sm font-bold uppercase tracking-wider mb-2">24/7 Favqulodda xizmat</div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold">Oqish, elektr, qulf — darhol yordam!</h2>
+            <p className="text-red-100 mt-2 text-sm max-w-lg">Favqulodda vaziyatda usta 30 daqiqa ichida yetib keladi. Toshkent, Samarqand, Andijon va boshqa shaharlar.</p>
+          </div>
+          <button onClick={() => setPage('order')} className="shrink-0 px-8 py-4 bg-white text-red-600 font-bold rounded-2xl hover:bg-red-50 transition-colors text-lg sos-pulse">
+            🆘 Hozir chaqirish
+          </button>
+        </div>
+      </section>
+
+      <section className="bg-ink-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-12">Qanday ishlaydi?</h2>
+          <div className="grid sm:grid-cols-3 gap-8">
+            {[
+              { step: '01', title: 'Usta toping', desc: "Profillarni ko'ring, sharhlarni o'qing va narxlarni solishtiring.", icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' },
+              { step: '02', title: 'Buyurtma va chat', desc: 'Buyurtma bering va real vaqtda chat orqali tafsilotlarni kelishib oling.', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
+              { step: '03', title: "Xavfsiz to'lov", desc: "Ish tugagach to'lang. Pulingiz himoyalangan.", icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
+            ].map((s,i) => (
+              <div key={i} className="text-center">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-brand-500/20 flex items-center justify-center">
+                  <Icon d={s.icon} className="w-7 h-7 text-brand-400" />
+                </div>
+                <div className="text-brand-400 font-display font-bold text-sm mb-2">QADAM {s.step}</div>
+                <h3 className="font-display font-bold text-lg mb-2">{s.title}</h3>
+                <p className="text-ink-400 text-sm">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-10">Mijozlarimiz nima deydi</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {TESTIMONIALS.map((t,i) => (
+            <div key={i} className="card-hover bg-white rounded-2xl p-5 border border-ink-100">
+              <StarRating rating={t.rating} />
+              <p className="text-sm text-ink-600 mt-3 mb-4 leading-relaxed">"{t.text}"</p>
+              <div className="flex items-center gap-3 pt-3 border-t border-ink-100">
+                <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs">{t.name[0]}</div>
+                <div>
+                  <div className="font-semibold text-sm">{t.name}</div>
+                  <div className="text-xs text-ink-400">{t.city} · {t.service}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <FAQSection />
+
+      {/* Mobile App */}
+      <section className="bg-ink-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col lg:flex-row items-center gap-10">
+          <div className="flex-1 text-center lg:text-left">
+            <span className="text-brand-400 text-xs font-bold uppercase tracking-wider">Tez orada</span>
+            <h2 className="font-display text-3xl font-bold mt-2 mb-4">Usta Bazar mobil ilovasi</h2>
+            <p className="text-ink-400 max-w-md">Usta toping, chat qiling va to'lang — barchasi cho'ntagingizda. iOS va Android uchun tez orada.</p>
+            <div className="flex gap-3 mt-6 justify-center lg:justify-start flex-wrap">
+              <div className="px-5 py-3 bg-ink-800 rounded-xl text-sm font-medium border border-ink-700"> App Store — Tez orada</div>
+              <div className="px-5 py-3 bg-ink-800 rounded-xl text-sm font-medium border border-ink-700"> Google Play — Tez orada</div>
+            </div>
+          </div>
+          <div className="w-48 h-80 bg-gradient-to-b from-brand-500 to-brand-700 rounded-[2rem] border-4 border-ink-700 shadow-2xl flex flex-col items-center justify-center p-4 text-center">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl font-bold mb-4">U</div>
+            <div className="font-display font-bold text-lg">Usta Bazar</div>
+            <div className="text-brand-200 text-xs mt-1">Mobil ilova</div>
+            <div className="mt-6 space-y-2 w-full">
+              <div className="h-8 bg-white/10 rounded-lg"></div>
+              <div className="h-8 bg-white/10 rounded-lg"></div>
+              <div className="h-8 bg-white/20 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+        <div className="bg-brand-500 rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold mb-3">Boshlashga tayyormisiz?</h2>
+          <p className="text-brand-100 mb-6 max-w-md mx-auto">Uy xizmatlari uchun Usta Bazarga ishonadigan minglab mijozlarga qo'shiling.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => setPage('auth')} className="px-8 py-3.5 bg-white text-brand-600 font-bold rounded-xl hover:bg-brand-50 transition-colors">Boshlash — Bepul</button>
+            <button onClick={() => setPage('roadmap')} className="px-8 py-3.5 bg-ink-900 text-white font-bold rounded-xl hover:bg-ink-800 transition-colors">🗺️ 18 oy rejasi — $500K</button>
+            <button onClick={() => setPage('investors')} className="px-8 py-3.5 border-2 border-white/40 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">💼 Investorlar</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ─── 2. Master Profile Page ─── */
+function MasterProfilePage({ setPage, selectedMaster, user, token, onBookOrder, onChatOrder }) {
+  const [selectedService, setSelectedService] = useState(0);
+  const [masterData, setMasterData] = useState(selectedMaster);
+  const [address, setAddress] = useState('Toshkent, manzil kiriting...');
+  const [booking, setBooking] = useState(false);
+  const [bookError, setBookError] = useState('');
+
+  useEffect(() => {
+    if (!selectedMaster?.id) return;
+    api('/masters/' + selectedMaster.id).then(setMasterData).catch(() => setMasterData(selectedMaster));
+  }, [selectedMaster?.id]);
+
+  const M = masterData ? {
+    ...MASTER,
+    id: masterData.id,
+    name: masterData.name,
+    title: masterData.title,
+    bio: masterData.bio || MASTER.bio,
+    avatar: masterAvatar(masterData.name),
+    verified: !!masterData.verified,
+    location: (masterData.city || 'Toshkent') + ", O'zbekiston",
+    rating: masterData.rating || MASTER.rating,
+    reviewsList: (masterData.reviews || []).map(r => ({
+      user: 'Mijoz', rating: r.rating, text: r.text, date: fmtDate(r.created_at),
+    })),
+  } : MASTER;
+
+  const svc = MASTER.services[selectedService];
+  const price = parsePrice(svc.price);
+
+  const requireAuth = () => {
+    sessionStorage.setItem('ub_after_auth', 'profile');
+    setPage('auth');
+    return false;
+  };
+
+  const createOrder = async (goPayment) => {
+    if (!token) return requireAuth();
+    if (!masterData?.id) { setBookError('Usta tanlanmagan'); return; }
+    setBooking(true);
+    setBookError('');
+    try {
+      const order = await api('/orders', {
+        method: 'POST',
+        body: JSON.stringify({ master_id: masterData.id, service: svc.name, price, address }),
+      }, token);
+      const full = await api('/orders/' + order.id, {}, token);
+      onBookOrder(full);
+      setPage(goPayment ? 'payment' : 'order');
+    } catch (e) {
+      setBookError(e.message);
+    }
+    setBooking(false);
+  };
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {selectedMaster && (
+        <button onClick={() => setPage('masters')} className="mb-4 text-sm text-brand-600 hover:underline font-medium">← Barcha ustalarga qaytish</button>
+      )}
+      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-2xl border border-ink-100 p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row gap-5">
+              <img src={M.avatar} alt="" className="w-24 h-24 rounded-2xl bg-brand-50 shrink-0" />
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="font-display text-2xl font-bold text-ink-900">{M.name}</h1>
+                  {M.verified && <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">✓ Tasdiqlangan</span>}
+                  {M.online && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1"><span className="status-dot bg-blue-500"></span> Onlayn</span>}
+                </div>
+                <p className="text-ink-500">{M.title}</p>
+                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
+                  <div className="flex items-center gap-1"><StarRating rating={M.rating} /><span className="font-semibold">{M.rating}</span><span className="text-ink-400">({MASTER.reviews} sharh)</span></div>
+                  <span className="text-ink-400">📍 {M.location}</span>
+                  <span className="text-ink-400">⏱ {MASTER.responseTime} ichida javob</span>
+                </div>
+                <div className="flex gap-4 mt-4 text-sm">
+                  <div className="bg-ink-50 rounded-xl px-4 py-2 text-center"><div className="font-bold text-ink-900">{MASTER.jobs}</div><div className="text-ink-400 text-xs">Ishlar</div></div>
+                  <div className="bg-ink-50 rounded-xl px-4 py-2 text-center"><div className="font-bold text-ink-900">{MASTER.memberSince}</div><div className="text-ink-400 text-xs">Boshlangan</div></div>
+                </div>
+              </div>
+            </div>
+            <p className="mt-6 text-ink-600 leading-relaxed">{M.bio}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-ink-100 p-6">
+            <h2 className="font-display font-bold text-lg mb-4">Ishlar galereyasi</h2>
+            <div className="grid grid-cols-4 gap-3">
+              {MASTER.gallery.map((g,i) => (
+                <div key={i} className="aspect-square bg-gradient-to-br from-brand-50 to-ink-50 rounded-xl flex items-center justify-center text-4xl border border-ink-100">{g}</div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-ink-100 p-6">
+            <h2 className="font-display font-bold text-lg mb-4">Sharhlar ({M.reviewsList?.length || MASTER.reviews})</h2>
+            <div className="space-y-4">
+              {(M.reviewsList?.length ? M.reviewsList : MASTER.reviewsList).map((r,i) => (
+                <div key={i} className="border-b border-ink-100 pb-4 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm">{r.user}</span>
+                    <span className="text-xs text-ink-400">{r.date}</span>
+                  </div>
+                  <StarRating rating={r.rating} />
+                  <p className="text-sm text-ink-600 mt-2">{r.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl border border-ink-100 p-6 sticky top-24">
+            <h2 className="font-display font-bold text-lg mb-4">Xizmatlar va narxlar</h2>
+            <div className="space-y-2 mb-4">
+              {MASTER.services.map((s,i) => (
+                <button key={i} onClick={() => setSelectedService(i)}
+                  className={`w-full text-left p-3 rounded-xl border transition-all ${selectedService === i ? 'border-brand-400 bg-brand-50' : 'border-ink-100 hover:border-ink-200'}`}>
+                  <div className="font-medium text-sm">{s.name}</div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-brand-600 font-bold">{s.price} {s.unit}</span>
+                    <span className="text-xs text-ink-400">{s.duration}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mb-3">
+              <label className="text-xs text-ink-500 font-medium">Manzil</label>
+              <input value={address} onChange={e => setAddress(e.target.value)} className="w-full mt-1 px-3 py-2 border border-ink-200 rounded-xl text-sm" />
+            </div>
+            {bookError && <p className="text-xs text-red-600 mb-2">{bookError}</p>}
+            <button onClick={() => createOrder(true)} disabled={booking} className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors">
+              {booking ? 'Yaratilmoqda...' : `Buyurtma — ${svc.price} so'm`}
+            </button>
+            <button onClick={() => createOrder(false)} disabled={booking} className="w-full mt-2 py-3 border border-ink-200 hover:bg-ink-50 text-ink-700 font-medium rounded-xl transition-colors text-sm">
+              Ustaga yozish (chat)
+            </button>
+            <div className="mt-4 space-y-2">
+              {[
+                { icon: '🛡️', text: '30 kun ish kafolati' },
+                { icon: '🔒', text: 'Escrow himoyalangan to\'lov' },
+                { icon: '📹', text: 'Video qo\'ng\'iroq mavjud' },
+              ].map((g,i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-ink-500 bg-ink-50 rounded-lg px-3 py-2">
+                  <span>{g.icon}</span>{g.text}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-ink-100 p-5">
+            <h3 className="font-semibold text-sm mb-3">Usta tekshiruvi</h3>
+            {['Hujjatlar tasdiqlangan', 'Tajriba tekshirilgan', 'Amaliy imtihon topshirgan', 'Mijozlar reytingi 4.5+'].map((s,i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-ink-600 mb-2">
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">✓</span>{s}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 3. Order + Chat Page ─── */
+function OrderChatPage({ setPage, token, user, currentOrder, setCurrentOrder, wsEvent }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [showReview, setShowReview] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewSent, setReviewSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const chatEnd = useRef(null);
+  const O = currentOrder;
+  const userRole = user?.role || 'customer';
+  const chatRole = userRole === 'master' ? 'master' : 'customer';
+  const partnerName = userRole === 'master' ? O?.customer_name : O?.master_name;
+  const stepIdx = orderStepIndex(O?.status);
+
+  const loadMessages = () => {
+    if (!token || !O?.id) return;
+    api('/orders/' + O.id + '/messages', {}, token)
+      .then(msgs => setMessages(msgs.map(m => mapApiMessage(m, chatRole))))
+      .catch(() => {});
+  };
+
+  useEffect(() => { loadMessages(); }, [O?.id, token]);
+  useEffect(() => {
+    if (!wsEvent || !O) return;
+    if (wsEvent.type === 'chat' && wsEvent.order_id === O.id) loadMessages();
+    if (wsEvent.type === 'order_update' && wsEvent.order_id === O.id) {
+      api('/orders/' + O.id, {}, token).then(setCurrentOrder).catch(() => {});
+    }
+  }, [wsEvent]);
+  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const send = async () => {
+    if (!input.trim() || !token || !O?.id) return;
+    setSending(true);
+    try {
+      await api('/orders/' + O.id + '/messages', { method: 'POST', body: JSON.stringify({ text: input.trim() }) }, token);
+      setInput('');
+      loadMessages();
+    } catch {}
+    setSending(false);
+  };
+
+  const updateStatus = async (status) => {
+    if (!token || !O?.id) return;
+    try {
+      await api('/orders/' + O.id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) }, token);
+      const full = await api('/orders/' + O.id, {}, token);
+      setCurrentOrder(full);
+    } catch {}
+  };
+
+  if (!O) {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <p className="text-ink-500 mb-4">Buyurtma tanlanmagan</p>
+        <button onClick={() => setPage(userRole === 'master' ? 'dashboard' : 'customer')} className="px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold">Kabinetga</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="grid lg:grid-cols-5 gap-6 h-[calc(100vh-10rem)] min-h-[500px]">
+        <div className="lg:col-span-2 space-y-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-ink-100 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-bold text-lg">Buyurtma tafsilotlari</h2>
+              {statusBadge(O.status)}
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-ink-400">Buyurtma ID</span><span className="font-mono font-medium">{O.order_code}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Xizmat</span><span className="font-medium">{O.service}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Usta</span><span className="font-medium">{O.master_name}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Mijoz</span><span className="font-medium">{O.customer_name}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Sana</span><span className="font-medium">{fmtDate(O.created_at)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Manzil</span><span className="font-medium text-right max-w-[60%]">{O.address || '—'}</span></div>
+              <hr className="border-ink-100" />
+              <div className="flex justify-between"><span className="text-ink-400">Xizmat</span><span>{fmt(O.price)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Platforma to'lovi</span><span>{fmt(O.fee)}</span></div>
+              <div className="flex justify-between font-bold text-base"><span>Jami</span><span className="text-brand-600">{fmt(O.total)}</span></div>
+            </div>
+            {O.status === 'pending' && userRole === 'customer' && (
+              <button onClick={() => setPage('payment')} className="w-full mt-4 py-2.5 bg-brand-500 text-white font-semibold rounded-xl text-sm hover:bg-brand-600 transition-colors">To'lovga o'tish</button>
+            )}
+            {userRole === 'master' && O.status === 'pending' && (
+              <button onClick={() => updateStatus('in_progress')} className="w-full mt-4 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm">Qabul qilish</button>
+            )}
+            {userRole === 'master' && O.status === 'in_progress' && (
+              <button onClick={() => updateStatus('completed')} className="w-full mt-4 py-2.5 bg-brand-500 text-white font-semibold rounded-xl text-sm">Ishni tugatish</button>
+            )}
+            {O.status !== 'disputed' && (
+              <button onClick={async () => {
+                const reason = prompt('Nizo sababi (qisqa):');
+                if (!reason || !token) return;
+                try {
+                  await api('/disputes', { method: 'POST', body: JSON.stringify({ order_id: O.id, reason }) }, token);
+                  const full = await api('/orders/' + O.id, {}, token);
+                  setCurrentOrder(full);
+                  alert('Nizo yuborildi — admin ko\'rib chiqadi');
+                } catch (e) { alert(e.message); }
+              }} className="w-full mt-2 py-2.5 border border-red-200 text-red-600 font-semibold rounded-xl text-sm hover:bg-red-50 transition-colors">⚠️ Nizo ochish</button>
+            )}
+            {O.status === 'completed' && userRole === 'customer' && (
+              <button onClick={() => setShowReview(true)} className="w-full mt-2 py-2.5 bg-ink-100 text-ink-700 font-semibold rounded-xl text-sm hover:bg-ink-200 transition-colors">⭐ Sharh qoldirish</button>
+            )}
+          </div>
+
+          <div className="bg-white rounded-2xl border border-ink-100 p-5">
+            <h3 className="font-semibold text-sm mb-3">Buyurtma bosqichlari</h3>
+            <div className="space-y-3">
+              {['Buyurtma berildi', 'Usta qabul qildi', 'Jarayonda', "Bajarildi va to'landi"].map((step, i) => (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i <= stepIdx ? 'bg-brand-500 text-white' : 'bg-ink-100 text-ink-400'}`}>{i < stepIdx ? '✓' : i + 1}</div>
+                  <span className={i <= stepIdx ? 'text-ink-800 font-medium' : 'text-ink-400'}>{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-ink-100 flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b border-ink-100 flex items-center gap-3">
+            <img src={masterAvatar(partnerName || O.master_name)} alt="" className="w-10 h-10 rounded-xl" />
+            <div>
+              <div className="font-semibold text-sm">{partnerName || O.master_name}</div>
+              <div className="text-xs text-emerald-600 flex items-center gap-1"><span className="status-dot bg-emerald-500"></span> Jonli chat</div>
+            </div>
+            <button onClick={() => setPage(userRole === 'master' ? 'dashboard' : 'customer')} className="ml-auto text-xs text-brand-600 font-medium hover:underline">← Orqaga</button>
+          </div>
+
+          <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-800 flex items-center gap-2">
+            <span>🛡️</span> Escrow himoya — xabarlar API orqali saqlanadi
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-5 space-y-3 chat-scroll">
+            {messages.length === 0 && <p className="text-center text-ink-400 text-sm py-8">Birinchi xabarni yozing</p>}
+            {messages.map(m => (
+              <div key={m.id} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${m.from === 'user' ? 'bg-brand-500 text-white rounded-br-md' : 'bg-ink-100 text-ink-800 rounded-bl-md'}`}>
+                  <p>{m.text}</p>
+                  <div className={`text-[10px] mt-1 ${m.from === 'user' ? 'text-brand-200' : 'text-ink-400'}`}>{m.time}</div>
+                </div>
+              </div>
+            ))}
+            <div ref={chatEnd} />
+          </div>
+
+          <div className="p-4 border-t border-ink-100 flex gap-2">
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !sending && send()}
+              placeholder={token ? 'Xabar yozing...' : 'Kirish kerak'} disabled={!token}
+              className="flex-1 px-4 py-2.5 bg-ink-50 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 disabled:opacity-50" />
+            <button onClick={send} disabled={!token || sending} className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white rounded-xl transition-colors">
+              <Icon d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showReview && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowReview(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="font-display font-bold text-lg mb-4">Ustaga sharh bering</h3>
+            {reviewSent ? (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-2">🎉</div>
+                <p className="font-semibold">Rahmat! Sharhingiz qabul qilindi.</p>
+                <p className="text-xs text-ink-400 mt-2">+100 sadoqat balli qo'shildi</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2 justify-center mb-4">
+                  {[1,2,3,4,5].map(i => (
+                    <button key={i} onClick={() => setRating(i)} className={`text-2xl ${i <= rating ? 'opacity-100' : 'opacity-30'}`}>⭐</button>
+                  ))}
+                </div>
+                <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} rows={3} placeholder="Tajribangiz haqida yozing..."
+                  className="w-full px-4 py-3 border border-ink-200 rounded-xl text-sm mb-4" />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowReview(false)} className="flex-1 py-2.5 border border-ink-200 rounded-xl text-sm">Bekor</button>
+                  <button onClick={async () => {
+                    try {
+                      if (token) await api('/reviews', { method: 'POST', body: JSON.stringify({ order_id: O.id, master_id: O.master_id, rating, text: reviewText }) }, token);
+                      const pts = +(localStorage.getItem('ub_points') || 0) + 100;
+                      localStorage.setItem('ub_points', pts);
+                      setReviewSent(true);
+                      setTimeout(() => setShowReview(false), 2000);
+                    } catch { setReviewSent(true); }
+                  }} className="flex-1 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold">Yuborish</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── 4. Master Dashboard ─── */
+function MasterDashboardPage({ setPage, user, token, setCurrentOrder }) {
+  const [tab, setTab] = useState('orders');
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    if (token) api('/orders', {}, token).then(setOrders).catch(() => {});
+  }, [token]);
+
+  const completed = orders.filter(o => o.status === 'completed');
+  const monthTotal = completed.reduce((s, o) => s + (o.price || 0), 0);
+  const pendingPay = orders.filter(o => ['pending', 'in_progress'].includes(o.status)).reduce((s, o) => s + (o.price || 0), 0);
+  const openOrder = (o) => { setCurrentOrder(o); setPage('order'); };
+
+  if (!token) {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <p className="text-ink-500 mb-4">Usta paneli uchun kiring</p>
+        <button onClick={() => setPage('auth')} className="px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold">Kirish</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-ink-900">Usta paneli</h1>
+          <p className="text-ink-500 text-sm">Xush kelibsiz, {user?.name || MASTER.name}</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5"><span className="status-dot bg-emerald-500"></span> {orders.filter(o => o.status === 'pending').length} yangi</span>
+          <span className="text-xs bg-brand-100 text-brand-700 px-3 py-1.5 rounded-full font-medium">{orders.length} buyurtma</span>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-4 mb-6">
+        {[
+          { icon: '⭐', label: 'Reyting', value: '4.9 / 5' },
+          { icon: '🎯', label: 'Bajarilish', value: '96%' },
+          { icon: '🔥', label: 'Ketma-ket ish', value: '12 kun' },
+        ].map((b,i) => (
+          <div key={i} className="bg-gradient-to-r from-brand-50 to-white rounded-xl p-4 border border-brand-100 flex items-center gap-3">
+            <span className="text-2xl">{b.icon}</span>
+            <div><div className="text-xs text-ink-400">{b.label}</div><div className="font-bold text-sm">{b.value}</div></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Jami buyurtma', value: orders.length },
+          { label: 'Bajarilgan', value: completed.length },
+          { label: 'Daromad (bajarilgan)', value: fmt(monthTotal) },
+          { label: "Kutilayotgan", value: fmt(pendingPay) },
+        ].map((s,i) => (
+          <div key={i} className="bg-white rounded-2xl border border-ink-100 p-5 card-hover">
+            <div className="text-sm text-ink-400 mb-1">{s.label}</div>
+            <div className="font-display font-bold text-xl text-ink-900">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-6 border-b border-ink-200">
+        {['orders', 'schedule', 'analytics'].map(t => (
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-brand-500 text-brand-600' : 'border-transparent text-ink-500 hover:text-ink-700'}`}>{TAB_LABELS[t]}</button>
+        ))}
+      </div>
+
+      {tab === 'orders' && (
+        <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-ink-50 text-ink-500 text-left">
+                  <th className="px-5 py-3 font-medium">Buyurtma</th>
+                  <th className="px-5 py-3 font-medium">Mijoz</th>
+                  <th className="px-5 py-3 font-medium">Xizmat</th>
+                  <th className="px-5 py-3 font-medium">Sana</th>
+                  <th className="px-5 py-3 font-medium">Summa</th>
+                  <th className="px-5 py-3 font-medium">Holat</th>
+                  <th className="px-5 py-3 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.length ? orders.map(o => (
+                  <tr key={o.id} className="border-t border-ink-100 hover:bg-ink-50/50">
+                    <td className="px-5 py-3.5 font-mono text-xs">{o.order_code}</td>
+                    <td className="px-5 py-3.5 font-medium">{o.customer_name}</td>
+                    <td className="px-5 py-3.5">{o.service}</td>
+                    <td className="px-5 py-3.5 text-ink-500">{fmtDate(o.created_at)}</td>
+                    <td className="px-5 py-3.5 font-semibold">{fmt(o.price)}</td>
+                    <td className="px-5 py-3.5">{statusBadge(o.status)}</td>
+                    <td className="px-5 py-3.5">
+                      <button onClick={() => openOrder(o)} className="text-brand-600 text-xs font-semibold hover:underline">Chat</button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan={7} className="px-5 py-12 text-center text-ink-400">Buyurtmalar yo'q — mijozlar kelganda shu yerda ko'rinadi</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'schedule' && (
+        <div className="grid sm:grid-cols-7 gap-2">
+          {DAYS.map((d,i) => (
+            <div key={d} className={`rounded-xl p-3 text-center border ${i === 5 ? 'bg-brand-50 border-brand-200' : 'bg-white border-ink-100'}`}>
+              <div className="text-xs text-ink-400 font-medium">{d}</div>
+              <div className="font-bold text-lg mt-1">{i === 5 ? '2' : i < 5 ? '1' : '0'}</div>
+              <div className="text-[10px] text-ink-400">ish</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'analytics' && (
+        <div className="grid sm:grid-cols-3 gap-4">
+          {[
+            { label: 'Bajarilish darajasi', value: '96%', sub: "O'tgan oyga nisbatan +2%" },
+            { label: "O'rtacha javob vaqti", value: '14 daqiqa', sub: "Ustalar orasida top 10%" },
+            { label: 'Takroriy mijozlar', value: '38%', sub: '12 ta qaytgan mijoz' },
+          ].map((a,i) => (
+            <div key={i} className="bg-white rounded-2xl border border-ink-100 p-5">
+              <div className="text-sm text-ink-400">{a.label}</div>
+              <div className="font-display font-bold text-2xl mt-1">{a.value}</div>
+              <div className="text-xs text-emerald-600 mt-1">{a.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── 5. Admin Panel ─── */
+function AdminPanelPage({ user, token, setPage }) {
+  const [section, setSection] = useState('overview');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+
+  const load = () => {
+    if (!token) return;
+    api('/admin/dashboard', {}, token).then(setData).catch(e => setError(e.message));
+  };
+  useEffect(() => { load(); }, [token]);
+
+  const toggleUser = async (id, status) => {
+    await api('/admin/users/' + id, { method: 'PATCH', body: JSON.stringify({ status }) }, token);
+    load();
+  };
+
+  if (!token || user?.role !== 'admin') {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <h1 className="font-display text-2xl font-bold mb-2">Admin panel</h1>
+        <p className="text-ink-500 text-sm mb-6">Faqat admin kirishi mumkin</p>
+        <p className="text-xs text-ink-400 mb-4">Demo: +998900000001 / demo1234</p>
+        <button onClick={() => setPage('auth')} className="px-6 py-3 bg-ink-900 text-white rounded-xl font-semibold">Kirish</button>
+      </div>
+    );
+  }
+
+  if (error) return <div className="page-enter p-8 text-center text-red-600">{error}</div>;
+  if (!data) return <div className="page-enter p-8 text-center text-ink-400">Yuklanmoqda...</div>;
+
+  const { stats, users, orders, disputes } = data;
+  const orderRows = section === 'disputes' ? orders.filter(o => o.status === 'disputed') : orders;
+
+  return (
+    <div className="page-enter max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="mb-8">
+        <h1 className="font-display text-2xl font-bold text-ink-900">Admin panel</h1>
+        <p className="text-ink-500 text-sm">Jonli API ma'lumotlari — {user.name}</p>
+      </div>
+
+      <div className="grid sm:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Foydalanuvchilar', value: stats.users },
+          { label: 'Ustalar', value: stats.masters },
+          { label: 'Buyurtmalar', value: stats.orders },
+          { label: "Daromad (komissiya)", value: fmt(stats.revenue) },
+        ].map((s,i) => (
+          <div key={i} className="bg-white rounded-2xl border border-ink-100 p-5">
+            <div className="text-sm text-ink-400">{s.label}</div>
+            <div className="font-display font-bold text-2xl mt-1">{s.value}</div>
+            {i === 3 && <div className="text-xs text-emerald-600 mt-1">{stats.leads} yangi B2B so'rov</div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {['overview', 'users', 'orders', 'disputes'].map(s => (
+          <button key={s} onClick={() => setSection(s)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${section === s ? 'bg-ink-900 text-white' : 'bg-white border border-ink-200 text-ink-600 hover:bg-ink-50'}`}>{ADMIN_SECTION_LABELS[s]}</button>
+        ))}
+      </div>
+
+      {(section === 'overview' || section === 'users') && (
+        <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden mb-6">
+          <div className="px-5 py-4 border-b border-ink-100"><h2 className="font-semibold">Foydalanuvchilar</h2></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-ink-50 text-ink-500 text-left">
+                <th className="px-5 py-3 font-medium">ID</th><th className="px-5 py-3 font-medium">Ism</th><th className="px-5 py-3 font-medium">Rol</th><th className="px-5 py-3 font-medium">Buyurtmalar</th><th className="px-5 py-3 font-medium">Holat</th><th className="px-5 py-3 font-medium">Amallar</th>
+              </tr></thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className="border-t border-ink-100">
+                    <td className="px-5 py-3.5 text-ink-400">#{u.id}</td>
+                    <td className="px-5 py-3.5 font-medium">{u.name}</td>
+                    <td className="px-5 py-3.5">{ROLE_LABELS[u.role] || u.role}</td>
+                    <td className="px-5 py-3.5">{u.orders}</td>
+                    <td className="px-5 py-3.5">{statusBadge(u.status)}</td>
+                    <td className="px-5 py-3.5">
+                      {u.status === 'suspended'
+                        ? <button onClick={() => toggleUser(u.id, 'active')} className="text-xs text-emerald-600 font-semibold hover:underline">Faollashtirish</button>
+                        : <button onClick={() => toggleUser(u.id, 'suspended')} className="text-xs text-red-500 font-semibold hover:underline">To'xtatish</button>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {(section === 'overview' || section === 'orders' || section === 'disputes') && (
+        <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-ink-100"><h2 className="font-semibold">Buyurtmalar {section === 'disputes' ? `— Nizoli (${disputes.length})` : ''}</h2></div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-ink-50 text-ink-500 text-left">
+                <th className="px-5 py-3 font-medium">Buyurtma</th><th className="px-5 py-3 font-medium">Mijoz</th><th className="px-5 py-3 font-medium">Usta</th><th className="px-5 py-3 font-medium">Summa</th><th className="px-5 py-3 font-medium">Holat</th>
+              </tr></thead>
+              <tbody>
+                {orderRows.length ? orderRows.map(o => (
+                  <tr key={o.id} className="border-t border-ink-100">
+                    <td className="px-5 py-3.5 font-mono text-xs">{o.order_code}</td>
+                    <td className="px-5 py-3.5">{o.customer_name}</td>
+                    <td className="px-5 py-3.5">{o.master_name}</td>
+                    <td className="px-5 py-3.5 font-semibold">{fmt(o.price)}</td>
+                    <td className="px-5 py-3.5">{statusBadge(o.status)}</td>
+                  </tr>
+                )) : <tr><td colSpan={5} className="px-5 py-10 text-center text-ink-400">Ma'lumot yo'q</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── 6. Payment Page ─── */
+function PaymentPage({ setPage, currentOrder, token, setCurrentOrder }) {
+  const [method, setMethod] = useState('card');
+  const [paid, setPaid] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState('');
+  const O = currentOrder;
+
+  const methodLabels = { card: 'Bank kartasi', payme: 'Payme', click: 'Click', uzcard: 'Uzcard', humo: 'Humo' };
+  const methodLabel = methodLabels[method] || method;
+
+  const handlePay = async () => {
+    if (!token || !O?.id) { setPayError('Avval kirish va buyurtma kerak'); return; }
+    setPaying(true);
+    setPayError('');
+    try {
+      if (method === 'payme') await api('/payments/payme', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
+      else if (method === 'click') await api('/payments/click', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
+      await api('/payments/confirm', { method: 'POST', body: JSON.stringify({ order_id: O.id, method }) }, token);
+      const full = await api('/orders/' + O.id, {}, token);
+      setCurrentOrder(full);
+      setPaid(true);
+    } catch (e) {
+      setPayError(e.message);
+    }
+    setPaying(false);
+  };
+
+  if (!O) {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <p className="text-ink-500 mb-4">Buyurtma yo'q — avval usta tanlang</p>
+        <button onClick={() => setPage('masters')} className="px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold">Ustalar</button>
+      </div>
+    );
+  }
+
+  if (paid) {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-100 flex items-center justify-center">
+          <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h1 className="font-display text-2xl font-bold text-ink-900 mb-2">To'lov muvaffaqiyatli!</h1>
+        <p className="text-ink-500 mb-2">{O.order_code} buyurtmasi tasdiqlandi.</p>
+        <p className="text-ink-400 text-sm mb-8">{fmt(O.total)} {methodLabel} orqali to'landi</p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <button onClick={() => setPage('order')} className="px-6 py-3 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 transition-colors">Buyurtma va chatga o'tish</button>
+          <button onClick={() => setPage('landing')} className="px-6 py-3 border border-ink-200 font-medium rounded-xl hover:bg-ink-50 transition-colors">Bosh sahifaga</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <h1 className="font-display text-2xl font-bold text-ink-900 mb-8">To'lov</h1>
+      <div className="grid lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white rounded-2xl border border-ink-100 p-6">
+            <h2 className="font-semibold mb-4">To'lov usuli</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {[
+                { id: 'card', label: 'Bank kartasi', icon: '💳' },
+                { id: 'payme', label: 'Payme', icon: '🟢' },
+                { id: 'click', label: 'Click', icon: '🔵' },
+                { id: 'uzcard', label: 'Uzcard', icon: '💙' },
+                { id: 'humo', label: 'Humo', icon: '❤️' },
+              ].map(m => (
+                <button key={m.id} onClick={() => setMethod(m.id)}
+                  className={`p-4 rounded-xl border text-center transition-all ${method === m.id ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-400/20' : 'border-ink-100 hover:border-ink-200'}`}>
+                  <div className="text-2xl mb-1">{m.icon}</div>
+                  <div className="text-sm font-medium">{m.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {method === 'card' && (
+            <div className="bg-white rounded-2xl border border-ink-100 p-6">
+              <h2 className="font-semibold mb-4">Karta ma'lumotlari</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-ink-500 font-medium">Karta raqami</label>
+                  <input type="text" placeholder="8600 0000 0000 0000" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-ink-500 font-medium">Amal qilish muddati</label>
+                    <input type="text" placeholder="OO/YY" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-ink-500 font-medium">CVV</label>
+                    <input type="text" placeholder="•••" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-ink-500 font-medium">Karta egasining ismi</label>
+                  <input type="text" placeholder="SARDOR KARIMOV" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(method === 'payme' || method === 'click' || method === 'uzcard' || method === 'humo') && (
+            <div className="bg-white rounded-2xl border border-ink-100 p-6 text-center py-12">
+              <div className="text-4xl mb-3">{method === 'payme' ? '🟢' : method === 'click' ? '🔵' : method === 'uzcard' ? '💙' : '❤️'}</div>
+              <p className="text-ink-600 text-sm">To'lovni yakunlash uchun <strong>{methodLabel}</strong> ga yo'naltirilasiz.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-2xl border border-ink-100 p-6 sticky top-24">
+            <h2 className="font-semibold mb-4">Buyurtma xulosasi</h2>
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-ink-100">
+              <img src={masterAvatar(O.master_name)} alt="" className="w-10 h-10 rounded-xl" />
+              <div>
+                <div className="font-medium text-sm">{O.master_name}</div>
+                <div className="text-xs text-ink-400">{O.service}</div>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm mb-4">
+              <div className="flex justify-between"><span className="text-ink-400">Buyurtma</span><span className="font-mono text-xs">{O.order_code}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Xizmat</span><span>{fmt(O.price)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-400">Platforma to'lovi</span><span>{fmt(O.fee)}</span></div>
+              <hr className="border-ink-100" />
+              <div className="flex justify-between font-bold text-base"><span>Jami</span><span className="text-brand-600">{fmt(O.total)}</span></div>
+            </div>
+            <div className="space-y-2 mb-4">
+              <div className="bg-ink-50 rounded-xl p-3 text-xs text-ink-500 flex items-start gap-2">
+                <span>🔒</span>
+                <span>To'lov ish tugaguncha escrowda saqlanadi. Karta ma'lumotlaringiz shifrlangan.</span>
+              </div>
+              <div className="bg-emerald-50 rounded-xl p-3 text-xs text-emerald-700 flex items-start gap-2">
+                <span>🛡️</span>
+                <span>30 kunlik ish kafolati — muammo bo'lsa bepul qayta bajariladi.</span>
+              </div>
+            </div>
+            {payError && <p className="text-xs text-red-600 mb-2">{payError}</p>}
+            <button onClick={handlePay} disabled={paying || !token} className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-brand-500/20">
+              {paying ? 'To\'lanmoqda...' : fmt(O.total) + ' to\'lash'}
+            </button>
+            <button onClick={() => setPage('order')} className="w-full mt-2 py-2 text-sm text-ink-500 hover:text-ink-700 transition-colors">← Buyurtmaga qaytish</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 7. Auth (Kirish / Ro'yxat) ─── */
+function AuthPage({ setPage, setUser, setToken }) {
+  const [mode, setMode] = useState('login');
+  const [role, setRole] = useState('customer');
+  const [form, setForm] = useState({ phone: '', password: '', name: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const finishAuth = (data) => {
+    setUser(data.user);
+    setToken(data.token);
+    localStorage.setItem('ub_token', data.token);
+    const after = sessionStorage.getItem('ub_after_auth');
+    sessionStorage.removeItem('ub_after_auth');
+    if (after === 'profile') setPage('profile');
+    else if (data.user.role === 'admin') setPage('admin');
+    else setPage(data.user.role === 'master' ? 'dashboard' : 'customer');
+  };
+
+  const demoLogin = async (r) => {
+    setLoading(true);
+    try {
+      const phone = r === 'admin' ? '+998900000001' : r === 'master' ? '+998901234567' : '+998912345678';
+      const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password: 'demo1234' }) });
+      finishAuth(data);
+    } catch {
+      const u = r === 'master' ? { name: 'Jamshid K.', role: 'master', phone: '+998901234567' } : { name: 'Sardor K.', role: 'customer', phone: '+998912345678' };
+      setUser(u);
+      setPage(r === 'admin' ? 'admin' : r === 'master' ? 'dashboard' : 'customer');
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (mode === 'register') {
+        if (role === 'master') {
+          sessionStorage.setItem('ub_master_reg', JSON.stringify(form));
+          setPage('onboarding');
+          setLoading(false);
+          return;
+        }
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        const data = await api('/auth/register', { method: 'POST', body: JSON.stringify({ ...form, phone: normalizePhone(form.phone), role, referral_code: ref || undefined }) });
+        finishAuth(data);
+      } else {
+        const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ phone: normalizePhone(form.phone), password: form.password }) });
+        finishAuth(data);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="page-enter min-h-[80vh] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-brand-500 flex items-center justify-center text-white font-display font-bold text-2xl mx-auto mb-4 shadow-lg shadow-brand-500/25">U</div>
+          <h1 className="font-display text-2xl font-bold">{mode === 'login' ? 'Xush kelibsiz!' : "Ro'yxatdan o'tish"}</h1>
+          <p className="text-ink-500 text-sm mt-1">Haqiqiy API bilan kirish — backend ulangan</p>
+        </div>
+
+        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>}
+
+        <div className="flex bg-ink-100 rounded-xl p-1 mb-6">
+          {[{ id: 'customer', label: '👤 Mijoz' }, { id: 'master', label: '🔧 Usta' }].map(r => (
+            <button key={r.id} onClick={() => setRole(r.id)} className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${role === r.id ? 'bg-white shadow text-ink-900' : 'text-ink-500'}`}>{r.label}</button>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl border border-ink-100 p-6 shadow-sm">
+          <div className="flex border-b border-ink-100 mb-6">
+            {['login', 'register'].map(m => (
+              <button key={m} onClick={() => setMode(m)} className={`flex-1 pb-3 text-sm font-semibold border-b-2 transition-colors ${mode === m ? 'border-brand-500 text-brand-600' : 'border-transparent text-ink-400'}`}>
+                {m === 'login' ? 'Kirish' : "Ro'yxat"}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <div>
+                <label className="text-xs text-ink-500 font-medium">Ism familiya</label>
+                <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Sardor Karimov" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+              </div>
+            )}
+            <div>
+              <label className="text-xs text-ink-500 font-medium">Telefon raqam</label>
+              <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+998 90 123 45 67" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+            </div>
+            <div>
+              <label className="text-xs text-ink-500 font-medium">Parol</label>
+              <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="••••••••" className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+            </div>
+            <button type="submit" disabled={loading} className="w-full py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors">
+              {loading ? 'Kutilmoqda...' : mode === 'login' ? 'Kirish' : "Ro'yxatdan o'tish"}
+            </button>
+          </form>
+
+          <div className="mt-5 pt-5 border-t border-ink-100">
+            <p className="text-xs text-ink-400 text-center mb-3">API demo (parol: demo1234)</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => demoLogin('customer')} className="py-2.5 bg-ink-50 hover:bg-ink-100 border border-ink-200 rounded-xl text-xs font-semibold transition-colors">👤 Mijoz</button>
+              <button onClick={() => demoLogin('master')} className="py-2.5 bg-ink-50 hover:bg-ink-100 border border-ink-200 rounded-xl text-xs font-semibold transition-colors">🔧 Usta</button>
+              <button onClick={() => demoLogin('admin')} className="py-2.5 bg-ink-900 hover:bg-ink-800 text-white rounded-xl text-xs font-semibold transition-colors">⚙️ Admin</button>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-ink-400 mt-6">
+          {role === 'master' && mode === 'register' ? "Ro'yxatdan keyin 3 bosqichli tekshiruvdan o'tasiz →" : ''}
+          {' '}<button onClick={() => setPage('investors')} className="text-brand-600 font-medium hover:underline">Investor ma'lumotlari</button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 8. Usta Onboarding ─── */
+function OnboardingPage({ setPage, setUser, setToken }) {
+  const [step, setStep] = useState(1);
+  const [done, setDone] = useState(false);
+  const [regError, setRegError] = useState('');
+  const [registering, setRegistering] = useState(false);
+  const [uploads, setUploads] = useState([]);
+  const steps = ['Shaxsiy ma\'lumot', 'Hujjatlar', 'Kasbiy imtihon'];
+
+  const handleDocPick = (e, type) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { alert('Fayl 5MB dan kichik bo\'lishi kerak'); return; }
+    setUploads(prev => [...prev.filter(u => u.type !== type), { file: f, type, name: f.name }]);
+  };
+
+  const completeRegistration = async () => {
+    setRegistering(true);
+    setRegError('');
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('ub_master_reg') || '{}');
+      const data = await api('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: saved.name || 'Yangi Usta',
+          phone: normalizePhone(saved.phone || '+998900000000'),
+          password: saved.password || 'demo1234',
+          role: 'master',
+          title: 'Santexnik usta',
+          city: 'Toshkent',
+          category: 'Santexnika',
+          bio: 'Usta Bazar orqali ro\'yxatdan o\'tdim',
+        }),
+      });
+      for (const item of uploads) {
+        const fd = new FormData();
+        fd.append('file', item.file);
+        fd.append('type', item.type);
+        const res = await fetch(API_URL + '/upload', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + data.token },
+          body: fd,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Hujjat yuklanmadi');
+        }
+      }
+      sessionStorage.removeItem('ub_master_reg');
+      setUser(data.user);
+      setToken(data.token);
+      localStorage.setItem('ub_token', data.token);
+      setDone(true);
+    } catch (e) {
+      setRegError(e.message);
+    }
+    setRegistering(false);
+  };
+
+  if (done) {
+    return (
+      <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-100 flex items-center justify-center text-4xl">🎉</div>
+        <h1 className="font-display text-2xl font-bold mb-2">Tabriklaymiz!</h1>
+        <p className="text-ink-500 mb-2">Siz Usta Bazar platformasiga qabul qilindingiz.</p>
+        <p className="text-sm text-ink-400 mb-8">API orqali ro'yxatdan o'tdingiz — endi buyurtmalar olishingiz mumkin.</p>
+        <button onClick={() => setPage('dashboard')} className="px-8 py-3 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 transition-colors">Panelga o'tish</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <div className="text-center mb-8">
+        <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">Usta ro'yxatdan o'tish</span>
+        <h1 className="font-display text-2xl font-bold mt-2">3 bosqichli tekshiruv</h1>
+        <p className="text-ink-500 text-sm mt-1">Faqat 42% nomzod qabul qilinadi — sifat kafolati</p>
+      </div>
+
+      <div className="flex items-center justify-between mb-10 px-4">
+        {steps.map((s,i) => (
+          <div key={i} className="flex flex-col items-center flex-1 relative">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold z-10 ${step > i+1 ? 'bg-emerald-500 text-white' : step === i+1 ? 'bg-brand-500 text-white' : 'bg-ink-100 text-ink-400'}`}>
+              {step > i+1 ? '✓' : i+1}
+            </div>
+            <span className="text-[10px] sm:text-xs text-ink-500 mt-2 text-center">{s}</span>
+            {i < 2 && <div className={`absolute top-5 left-[60%] w-[80%] h-0.5 ${step > i+1 ? 'bg-emerald-500' : 'bg-ink-200'}`}></div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-ink-100 p-6 sm:p-8">
+        {step === 1 && (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg mb-4">Shaxsiy ma'lumotlar</h2>
+            {[['To\'liq ism', 'Jamshid Karimov'], ['Telefon', '+998 90 123 45 67'], ['Shahar', 'Toshkent'], ['Mutaxassislik', 'Santexnik'], ['Tajriba (yil)', '5']].map(([l,p],i) => (
+              <div key={i}>
+                <label className="text-xs text-ink-500 font-medium">{l}</label>
+                <input defaultValue={p} className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+              </div>
+            ))}
+          </div>
+        )}
+        {step === 2 && (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg mb-4">Hujjatlarni yuklash</h2>
+            {[
+              { label: 'Pasport / ID karta', type: 'passport' },
+              { label: 'Kasbiy sertifikat (agar bor)', type: 'certificate' },
+              { label: 'Ish namunasi (foto)', type: 'portfolio' },
+            ].map((doc, i) => {
+              const uploaded = uploads.find(u => u.type === doc.type);
+              return (
+                <label key={i} className="block border-2 border-dashed border-ink-200 rounded-xl p-6 text-center hover:border-brand-400 hover:bg-brand-50/30 transition-colors cursor-pointer">
+                  <input type="file" accept="image/*,.pdf" className="hidden" onChange={e => handleDocPick(e, doc.type)} />
+                  <div className="text-2xl mb-2">{uploaded ? '✅' : '📄'}</div>
+                  <div className="font-medium text-sm">{doc.label}</div>
+                  <div className="text-xs text-ink-400 mt-1">{uploaded ? uploaded.name : 'Bosing — JPG, PNG, PDF (max 5MB)'}</div>
+                </label>
+              );
+            })}
+            <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-lg p-3">
+              <span>🔒</span> Hujjatlar serverga xavfsiz yuklanadi (ro'yxatdan keyin saqlanadi)
+            </div>
+          </div>
+        )}
+        {step === 3 && (
+          <div className="space-y-4">
+            <h2 className="font-semibold text-lg mb-2">Kasbiy imtihon</h2>
+            <p className="text-sm text-ink-500 mb-4">10 ta savol — 80% dan yuqori natija kerak</p>
+            <div className="bg-ink-50 rounded-xl p-5">
+              <div className="text-sm font-medium mb-3">Savol 3/10: Quvur oqishi aniqlanganda birinchi qadam nima?</div>
+              {['Ustaga qo\'ng\'iroq qilish', 'Suv ventilini yopish', 'Rasmga olish', 'Hech narsa qilmaslik'].map((a,i) => (
+                <label key={i} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer mb-2 transition-colors ${i === 1 ? 'bg-brand-50 border border-brand-200' : 'hover:bg-white'}`}>
+                  <input type="radio" name="q" defaultChecked={i===1} className="accent-brand-500" />
+                  <span className="text-sm">{a}</span>
+                </label>
+              ))}
+            </div>
+            <div className="w-full bg-ink-100 rounded-full h-2"><div className="bg-brand-500 h-2 rounded-full w-[30%]"></div></div>
+            <div className="text-xs text-ink-400 text-center">Javob berildi: 3/10</div>
+          </div>
+        )}
+
+        {regError && <p className="text-sm text-red-600 mt-4">{regError}</p>}
+        <div className="flex gap-3 mt-8">
+          {step > 1 && <button onClick={() => setStep(step-1)} className="flex-1 py-3 border border-ink-200 rounded-xl font-medium text-sm hover:bg-ink-50 transition-colors">Orqaga</button>}
+          <button onClick={() => step < 3 ? setStep(step+1) : completeRegistration()} disabled={registering} className="flex-1 py-3 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors">
+            {step < 3 ? 'Keyingi bosqich' : (registering ? 'Ro\'yxatdan o\'tmoqda...' : 'Imtihonni yakunlash')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 9. B2B Korporativ ─── */
+function B2BPage({ setPage }) {
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ company: '', contact: '', phone: '', email: '', city: 'Toshkent', service: '' });
+  const [selectedPkg, setSelectedPkg] = useState('');
+
+  const submitLead = async (pkg) => {
+    if (!form.contact || !form.phone) { alert('Ism va telefon kiriting'); return; }
+    setLoading(true);
+    try {
+      await api('/leads', { method: 'POST', body: JSON.stringify({ ...form, package: pkg || selectedPkg }) });
+      setSent(true);
+    } catch (e) { alert(e.message); }
+    setLoading(false);
+  };
+
+  if (sent) return (
+    <div className="page-enter max-w-lg mx-auto px-4 py-20 text-center">
+      <div className="text-5xl mb-4">✅</div>
+      <h1 className="font-display text-2xl font-bold mb-2">So'rov qabul qilindi!</h1>
+      <p className="text-ink-500 text-sm">Menejerimiz 24 soat ichida siz bilan bog'lanadi.</p>
+      <button onClick={() => setPage('landing')} className="mt-6 px-6 py-3 bg-brand-500 text-white rounded-xl font-semibold">Bosh sahifaga</button>
+    </div>
+  );
+
+  return (
+    <div className="page-enter">
+      <section className="bg-gradient-to-br from-ink-900 to-ink-800 text-white py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="text-brand-400 text-xs font-bold uppercase tracking-wider">B2B — Korporativ mijozlar</span>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold mt-3 mb-4">Ofis, mehmonxona, savdo markazi uchun usta xizmati</h1>
+          <p className="text-ink-400 max-w-2xl mx-auto">Bir shartnoma — cheksiz usta. Oylik paket, shaxsiy menejer, SLA kafolati.</p>
+        </div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 py-16 -mt-8">
+        <div className="grid sm:grid-cols-3 gap-5">
+          {B2B_PACKAGES.map((p,i) => (
+            <div key={i} className={`bg-white rounded-2xl border p-6 card-hover relative ${p.popular ? 'border-brand-400 ring-2 ring-brand-400/20 shadow-lg' : 'border-ink-100'}`}>
+              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full">Eng mashhur</span>}
+              <h3 className="font-display font-bold text-xl">{p.name}</h3>
+              <p className="text-ink-500 text-sm mt-1 mb-4">{p.desc}</p>
+              <div className="font-display font-bold text-2xl text-brand-600 mb-4">{p.price} <span className="text-sm font-normal text-ink-400">{p.unit}</span></div>
+              <ul className="space-y-2 mb-6">
+                {p.features.map((f,j) => <li key={j} className="text-sm flex items-center gap-2"><span className="text-emerald-500">✓</span>{f}</li>)}
+              </ul>
+              <button onClick={() => { setSelectedPkg(p.name); submitLead(p.name); }} disabled={loading} className={`w-full py-3 rounded-xl font-semibold text-sm transition-colors ${p.popular ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-ink-200 hover:bg-ink-50'}`}>Bog'lanish</button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-4 pb-16">
+        <div className="bg-white rounded-2xl border border-ink-100 p-8">
+          <h2 className="font-display font-bold text-xl mb-6 text-center">Korporativ so'rov yuborish</h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              ['company', 'Kompaniya nomi'], ['contact', 'Aloqa shaxsi'], ['phone', 'Telefon'],
+              ['email', 'Email'], ['city', 'Shahar'], ['service', 'Xizmat turi'],
+            ].map(([k, l]) => (
+              <div key={k}>
+                <label className="text-xs text-ink-500 font-medium">{l}</label>
+                <input value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}
+                  className="w-full mt-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-400/40" />
+              </div>
+            ))}
+          </div>
+          <button onClick={() => submitLead('')} disabled={loading} className="w-full mt-6 py-3.5 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 disabled:opacity-60 transition-colors">
+            {loading ? 'Yuborilmoqda...' : "So'rov yuborish"}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ─── 10. Investorlar sahifasi ─── */
+function InvestorsPage({ setPage }) {
+  const [calcOrders, setCalcOrders] = useState(500);
+  const calcRevenue = Math.round(calcOrders * 150000 * 0.125 / 1000);
+
+  return (
+    <div className="page-enter">
+      <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">INVESTOR DECK — MVP v1.0</span>
+          <h1 className="font-display text-3xl sm:text-5xl font-bold mt-4 mb-4">Usta Bazar</h1>
+          <p className="text-emerald-100 text-lg max-w-2xl mx-auto">O'zbekistonning uy xizmatlari bozori — raqamlashtirilmagan $500M+ imkoniyat</p>
+          <div className="flex flex-wrap gap-4 justify-center mt-8">
+            <div className="bg-white/10 rounded-2xl px-6 py-4 backdrop-blur"><div className="text-3xl font-bold">$50K</div><div className="text-emerald-200 text-sm">MVP qiymati</div></div>
+            <div className="bg-white/10 rounded-2xl px-6 py-4 backdrop-blur"><div className="text-3xl font-bold">$500M+</div><div className="text-emerald-200 text-sm">Bozor hajmi (TAM)</div></div>
+            <div className="bg-white/10 rounded-2xl px-6 py-4 backdrop-blur"><div className="text-3xl font-bold">12.5%</div><div className="text-emerald-200 text-sm">Komissiya</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 py-16">
+        <h2 className="font-display text-2xl font-bold text-center mb-10">Bozor tahlili</h2>
+        <div className="grid sm:grid-cols-3 gap-5">
+          {[
+            { label: 'TAM', value: '$500M+', desc: "O'zbekistonda yillik uy xizmatlari bozori" },
+            { label: 'SAM', value: '$80M', desc: 'Onlayn orqali xizmat ko\'rsatish mumkin bo\'lgan segment' },
+            { label: 'SOM (3-yil)', value: '$2M', desc: 'Bizning 3 yillik maqsadimiz — bozorning 2.5%' },
+          ].map((m,i) => (
+            <div key={i} className="bg-white rounded-2xl border border-ink-100 p-6 text-center card-hover">
+              <div className="text-xs font-bold text-brand-600 uppercase tracking-wider">{m.label}</div>
+              <div className="font-display font-bold text-3xl text-ink-900 mt-2">{m.value}</div>
+              <p className="text-sm text-ink-500 mt-2">{m.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-ink-50 py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="font-display text-2xl font-bold text-center mb-10">3 yillik moliyaviy prognoz</h2>
+          <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead><tr className="bg-ink-900 text-white text-left">
+                <th className="px-5 py-3">Yil</th><th className="px-5 py-3">Ustalar</th><th className="px-5 py-3">Buyurtmalar</th><th className="px-5 py-3">GMV</th><th className="px-5 py-3">Daromad</th><th className="px-5 py-3">Marja</th>
+              </tr></thead>
+              <tbody>
+                {FINANCIALS.map((f,i) => (
+                  <tr key={i} className="border-t border-ink-100">
+                    <td className="px-5 py-4 font-bold">{f.year}</td>
+                    <td className="px-5 py-4">{f.masters}</td>
+                    <td className="px-5 py-4">{f.orders}</td>
+                    <td className="px-5 py-4 font-semibold text-brand-600">{f.gmv}</td>
+                    <td className="px-5 py-4 font-bold text-emerald-600">{f.revenue}</td>
+                    <td className="px-5 py-4">{f.margin}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-end justify-center gap-6 mt-8 h-40">
+            {FINANCIALS.map((f,i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="w-16 bg-brand-500 rounded-t-lg transition-all" style={{height: `${(i+1)*35}%`}}></div>
+                <span className="text-xs font-bold text-ink-600">{f.revenue}</span>
+                <span className="text-[10px] text-ink-400">{f.year}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-4 py-16">
+        <h2 className="font-display text-2xl font-bold text-center mb-8">Daromad kalkulyatori</h2>
+        <div className="bg-white rounded-2xl border border-ink-100 p-8">
+          <label className="text-sm font-medium">Oylik buyurtmalar soni: <strong className="text-brand-600">{calcOrders}</strong></label>
+          <input type="range" min="100" max="5000" step="100" value={calcOrders} onChange={e => setCalcOrders(+e.target.value)} className="w-full mt-3 accent-brand-500" />
+          <div className="grid grid-cols-3 gap-4 mt-6 text-center">
+            <div className="bg-ink-50 rounded-xl p-4"><div className="text-xs text-ink-400">O'rtacha chek</div><div className="font-bold">150 000 so'm</div></div>
+            <div className="bg-ink-50 rounded-xl p-4"><div className="text-xs text-ink-400">Komissiya</div><div className="font-bold">12.5%</div></div>
+            <div className="bg-brand-50 rounded-xl p-4"><div className="text-xs text-brand-600">Oylik daromad</div><div className="font-bold text-brand-600">${calcRevenue}K</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 py-16">
+        <h2 className="font-display text-2xl font-bold text-center mb-10">MVP tayyorlik — nima tayyor?</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            { done: true, item: '10 ta to\'liq sahifa (UI/UX)' },
+            { done: true, item: 'Mijoz + Usta + Admin oqimlari' },
+            { done: true, item: 'Kirish / Ro\'yxatdan o\'tish' },
+            { done: true, item: 'Usta 3 bosqichli onboarding' },
+            { done: true, item: 'Buyurtma + Chat + To\'lov' },
+            { done: true, item: 'Korporativ B2B paketlar' },
+            { done: true, item: 'Investor deck + moliyaviy model' },
+            { done: true, item: 'Payme / Click / Uzcard / Humo UI' },
+            { done: false, item: 'Haqiqiy backend + ma\'lumotlar bazasi' },
+            { done: false, item: 'To\'lov API integratsiyasi' },
+            { done: false, item: 'Mobil ilova (iOS / Android)' },
+            { done: false, item: '50+ haqiqiy usta + pilot' },
+          ].map((c,i) => (
+            <div key={i} className={`flex items-center gap-3 p-4 rounded-xl border ${c.done ? 'bg-emerald-50 border-emerald-100' : 'bg-ink-50 border-ink-100'}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${c.done ? 'bg-emerald-500 text-white' : 'bg-ink-200 text-ink-500'}`}>{c.done ? '✓' : '○'}</span>
+              <span className={`text-sm ${c.done ? 'text-ink-800' : 'text-ink-400'}`}>{c.item}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="max-w-3xl mx-auto px-4 pb-16">
+        <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-3xl p-8 sm:p-12 text-center text-white">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold mb-3">MVP sotib olish yoki investitsiya</h2>
+          <p className="text-brand-100 mb-2 max-w-lg mx-auto">To'liq UI/UX, biznes model, investor deck, brend — tayyor startup paketi</p>
+          <div className="font-display text-4xl font-bold my-6">$50,000</div>
+          <p className="text-brand-200 text-sm mb-8">MVP + IP + brend + 3 yillik biznes reja</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => setPage('auth')} className="px-8 py-3.5 bg-white text-brand-600 font-bold rounded-xl hover:bg-brand-50 transition-colors">Demoni sinab ko'ring</button>
+            <a href="mailto:info@ustabazar.uz" className="px-8 py-3.5 border-2 border-white/40 font-bold rounded-xl hover:bg-white/10 transition-colors">info@ustabazar.uz</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ─── 11. 18 oy Yo'l xaritasi ($500K+) ─── */
+function RoadmapPage({ setPage }) {
+  const [done, setDone] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ub_roadmap') || '{}'); } catch { return {}; }
+  });
+  const [activePhase, setActivePhase] = useState(1);
+
+  const toggle = (id) => {
+    const next = { ...done, [id]: !done[id] };
+    setDone(next);
+    localStorage.setItem('ub_roadmap', JSON.stringify(next));
+  };
+
+  const allTasks = ROADMAP_PHASES.flatMap(p => p.tasks);
+  const completed = allTasks.filter(t => done[t.id]).length;
+  const pct = Math.round((completed / allTasks.length) * 100);
+  const phase = ROADMAP_PHASES.find(p => p.phase === activePhase);
+
+  const colorMap = {
+    brand: 'bg-brand-500', blue: 'bg-blue-500', emerald: 'bg-emerald-500',
+    purple: 'bg-purple-500', amber: 'bg-amber-500', red: 'bg-red-500',
+  };
+
+  return (
+    <div className="page-enter">
+      <section className="bg-gradient-to-br from-ink-900 via-ink-800 to-brand-900 text-white py-14 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="bg-brand-500/30 border border-brand-400/30 px-3 py-1 rounded-full text-xs font-bold">MAQSAD: $500K – $800K · 18 OY</span>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold mt-4 mb-3">Usta Bazar — Yo'l xaritasi</h1>
+          <p className="text-ink-300 text-sm max-w-xl mx-auto">Har bir bosqichni bajaring — progress avtomatik saqlanadi</p>
+          <div className="mt-8 bg-white/10 rounded-2xl p-5 backdrop-blur max-w-md mx-auto">
+            <div className="flex justify-between text-sm mb-2">
+              <span>Umumiy progress</span>
+              <span className="font-bold">{completed}/{allTasks.length} ({pct}%)</span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-3">
+              <div className="bg-brand-400 h-3 rounded-full transition-all duration-500" style={{width: `${pct}%`}}></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-4 text-center text-xs">
+              <div><div className="font-bold text-lg">18</div><div className="text-ink-400">oy</div></div>
+              <div><div className="font-bold text-lg text-brand-300">$500K+</div><div className="text-ink-400">maqsad</div></div>
+              <div><div className="font-bold text-lg">{ROADMAP_PHASES.length}</div><div className="text-ink-400">bosqich</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-8">
+          {ROADMAP_PHASES.map(p => {
+            const pDone = p.tasks.filter(t => done[t.id]).length;
+            return (
+              <button key={p.phase} onClick={() => setActivePhase(p.phase)}
+                className={`shrink-0 px-4 py-3 rounded-xl text-left border transition-all ${activePhase === p.phase ? 'border-brand-400 bg-brand-50 shadow-md' : 'border-ink-100 bg-white hover:border-ink-200'}`}>
+                <div className="text-[10px] font-bold text-ink-400">BOSQICH {p.phase}</div>
+                <div className="font-semibold text-sm">{p.title}</div>
+                <div className="text-[10px] text-ink-400 mt-0.5">{p.months}</div>
+                <div className="text-xs text-brand-600 font-bold mt-1">{pDone}/{p.tasks.length} ✓</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {phase && (
+          <div className="bg-white rounded-2xl border border-ink-100 overflow-hidden">
+            <div className={`${colorMap[phase.color]} text-white px-6 py-5`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-white/70 text-xs font-bold uppercase">Bosqich {phase.phase} · {phase.months}</div>
+                  <h2 className="font-display text-2xl font-bold">{phase.title}</h2>
+                  <p className="text-white/80 text-sm mt-1">Maqsad: {phase.goal}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-white/70 text-xs">Kutilgan daromad</div>
+                  <div className="font-display font-bold text-2xl">{phase.revenue}</div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-3">
+              {phase.tasks.map(t => (
+                <label key={t.id} className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${done[t.id] ? 'bg-emerald-50 border-emerald-200' : 'bg-ink-50 border-ink-100 hover:border-ink-200'}`}>
+                  <input type="checkbox" checked={!!done[t.id]} onChange={() => toggle(t.id)} className="mt-0.5 w-5 h-5 accent-emerald-500 shrink-0" />
+                  <div className="flex-1">
+                    <span className={`text-sm font-medium ${done[t.id] ? 'line-through text-ink-400' : 'text-ink-800'}`}>{t.text}</span>
+                    {t.critical && !done[t.id] && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">MUHIM</span>}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 grid sm:grid-cols-3 gap-4">
+          <div className="bg-brand-50 border border-brand-100 rounded-2xl p-5 text-center">
+            <div className="text-2xl mb-2">🚀</div>
+            <div className="font-bold text-sm mb-1">HOZIR — Bosqich 1</div>
+            <p className="text-xs text-ink-500 mb-3">Backend papkasini ishga tushiring</p>
+            <code className="text-[10px] bg-white px-2 py-1 rounded border block">cd backend → npm install → npm start</code>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-center">
+            <div className="text-2xl mb-2">💰</div>
+            <div className="font-bold text-sm mb-1">6 oy maqsad</div>
+            <p className="text-xs text-ink-500">50 usta · 200 buyurtma · $2K/oy</p>
+          </div>
+          <div className="bg-ink-900 text-white rounded-2xl p-5 text-center">
+            <div className="text-2xl mb-2">🏆</div>
+            <div className="font-bold text-sm mb-1">18 oy maqsad</div>
+            <p className="text-xs text-ink-400">$500K – $800K sotish yoki investitsiya</p>
+            <button onClick={() => setPage('investors')} className="mt-3 text-xs text-brand-400 hover:underline">Investor sahifasi →</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ─── 12. Mijoz kabineti ─── */
+function CustomerPage({ setPage, user, token, setCurrentOrder }) {
+  const [orders, setOrders] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [points, setPoints] = useState(() => +(localStorage.getItem('ub_points') || 0));
+  useEffect(() => {
+    if (token) api('/orders', {}, token).then(setOrders).catch(() => {});
+    api('/stats').then(setStats).catch(() => {});
+  }, [token]);
+
+  const pointsValue = Math.floor(points / 500) * 50000;
+
+  return (
+    <div className="page-enter max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <h1 className="font-display text-2xl font-bold mb-1">Mijoz kabineti</h1>
+      <p className="text-ink-500 text-sm mb-8">{user?.name || 'Mehmon'} — buyurtmalaringiz va bonuslar</p>
+      <div className="grid sm:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Buyurtmalarim', value: orders.length || '0', icon: '📋' },
+          { label: 'Sadoqat ballari', value: points, icon: '🏅' },
+          { label: 'Chegirma mavjud', value: fmt(pointsValue), icon: '🎁' },
+          { label: 'Platformada', value: stats?.users || stats?.masters || '—', icon: '👥' },
+        ].map((s,i) => (
+          <div key={i} className="bg-white rounded-2xl border border-ink-100 p-5 card-hover">
+            <div className="text-2xl mb-2">{s.icon}</div>
+            <div className="font-bold text-xl">{s.value}</div>
+            <div className="text-xs text-ink-400">{s.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl border border-ink-100 p-6">
+          <h2 className="font-semibold mb-4">So'nggi buyurtmalar</h2>
+          {orders.length ? orders.map(o => (
+            <button key={o.id} onClick={() => { setCurrentOrder(o); setPage('order'); }} className="w-full flex justify-between items-center py-3 border-b border-ink-50 last:border-0 text-sm hover:bg-ink-50 rounded-lg px-2 text-left">
+              <div><div className="font-medium">{o.service}</div><div className="text-xs text-ink-400">{o.order_code} · {o.master_name}</div></div>
+              {statusBadge(o.status)}
+            </button>
+          )) : (
+            <div className="text-center py-8 text-ink-400 text-sm">
+              <p>Buyurtma yo'q</p>
+              <button onClick={() => setPage('masters')} className="mt-3 px-4 py-2 bg-brand-500 text-white rounded-lg text-xs font-semibold">Usta topish</button>
+            </div>
+          )}
+        </div>
+        <div className="space-y-4">
+          <div className="bg-brand-50 border border-brand-100 rounded-2xl p-5">
+            <h3 className="font-semibold text-sm mb-2">Tezkor harakatlar</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Usta topish', page: 'masters', icon: '🔍' },
+                { label: 'Favqulodda', page: 'order', icon: '🆘' },
+                { label: 'Referral', page: 'referral', icon: '🎁' },
+                { label: "To'lov", page: 'payment', icon: '💳' },
+              ].map((a,i) => (
+                <button key={i} onClick={() => setPage(a.page)} className="p-3 bg-white rounded-xl text-xs font-medium hover:shadow transition-all text-left">
+                  {a.icon} {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-ink-100 p-5">
+            <h3 className="font-semibold text-sm mb-2">Sadoqat dasturi</h3>
+            <p className="text-xs text-ink-500 mb-3">Har buyurtma va sharh = +100 ball. 500 ball = 50 000 so'm chegirma.</p>
+            <div className="h-2 bg-ink-100 rounded-full overflow-hidden">
+              <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${Math.min(100, (points % 500) / 5)}%` }}></div>
+            </div>
+            <p className="text-[10px] text-ink-400 mt-1">{500 - (points % 500)} ball keyingi chegirmagacha</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-ink-100 p-5">
+            <h3 className="font-semibold text-sm mb-2">30 kun kafolat</h3>
+            <p className="text-xs text-ink-500">Har bir buyurtmangiz 30 kun ish kafolati bilan himoyalangan. Muammo bo'lsa — bepul qayta bajariladi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 13. Referral ─── */
+function ReferralPage({ token }) {
+  const [data, setData] = useState({ code: 'UBDEMO01', invites: 0, earned: 0, bonus_per_invite: 50000 });
+  useEffect(() => { if (token) api('/referrals', {}, token).then(setData).catch(() => {}); }, [token]);
+  const link = `https://ustabazar.uz/?ref=${data.code}`;
+
+  return (
+    <div className="page-enter max-w-3xl mx-auto px-4 py-12">
+      <div className="text-center mb-10">
+        <div className="text-5xl mb-4">🎁</div>
+        <h1 className="font-display text-3xl font-bold">Do'stingizni taklif qiling</h1>
+        <p className="text-ink-500 mt-2">Har bir do'st uchun <strong>50 000 so'm</strong> bonus oling</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-ink-100 p-8 mb-6">
+        <div className="text-center mb-6">
+          <div className="text-xs text-ink-400 mb-1">Sizning referral kodingiz</div>
+          <div className="font-display text-4xl font-bold text-brand-600 tracking-widest">{data.code}</div>
+        </div>
+        <div className="flex gap-2">
+          <input readOnly value={link} className="flex-1 px-4 py-3 bg-ink-50 border border-ink-200 rounded-xl text-sm" />
+          <button onClick={() => navigator.clipboard?.writeText(link)} className="px-5 py-3 bg-brand-500 text-white font-semibold rounded-xl text-sm shrink-0">Nusxalash</button>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="bg-white rounded-2xl border p-5"><div className="font-bold text-2xl">{data.invites}</div><div className="text-xs text-ink-400">Taklif qilingan</div></div>
+        <div className="bg-white rounded-2xl border p-5"><div className="font-bold text-2xl text-emerald-600">{fmt(data.earned)}</div><div className="text-xs text-ink-400">Bonus topildi</div></div>
+        <div className="bg-white rounded-2xl border p-5"><div className="font-bold text-2xl">50K</div><div className="text-xs text-ink-400">Har bir do'st</div></div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 14. Marketing rejasi ─── */
+function MarketingPage() {
+  const channels = [
+    { name: 'Instagram', budget: '3 mln/oy', reach: '50K+', tactic: 'Before/after video, usta hikoyalari, Reels', icon: '📸', priority: 'Yuqori' },
+    { name: 'Telegram', budget: '1 mln/oy', reach: '30K+', tactic: 'Kanal + bot, buyurtma bildirishnomalari', icon: '✈️', priority: 'Yuqori' },
+    { name: 'Google / SEO', budget: '2 mln/oy', reach: '10K+', tactic: '"Toshkent santexnik" kalit so\'zlar', icon: '🔍', priority: 'O\'rta' },
+    { name: 'YouTube', budget: '1.5 mln/oy', reach: '20K+', tactic: 'Usta master-klasslari, mijoz hikoyalari', icon: '▶️', priority: 'O\'rta' },
+    { name: 'B2B savdo', budget: '2 mln/oy', reach: '50 biznes', tactic: 'Mehmonxona, ofis, savdo markazlari', icon: '🏢', priority: 'Yuqori' },
+    { name: 'Referral', budget: '500K/oy', reach: 'Viral', tactic: '50K bonus har do\'st uchun', icon: '🎁', priority: 'Yuqori' },
+  ];
+  return (
+    <div className="page-enter max-w-5xl mx-auto px-4 py-12">
+      <div className="text-center mb-10">
+        <span className="text-xs font-bold text-brand-600 uppercase tracking-wider">Bosqich 3 — Pilot</span>
+        <h1 className="font-display text-3xl font-bold mt-2">Marketing rejasi</h1>
+        <p className="text-ink-500 text-sm">50 usta + 200 buyurtma uchun — oylik ~10 mln so'm byudjet</p>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+        {channels.map((c,i) => (
+          <div key={i} className="bg-white rounded-2xl border border-ink-100 p-5 card-hover">
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-2xl">{c.icon}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.priority === 'Yuqori' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>{c.priority}</span>
+            </div>
+            <h3 className="font-bold">{c.name}</h3>
+            <div className="text-sm text-brand-600 font-semibold mt-1">{c.budget} · {c.reach}</div>
+            <p className="text-xs text-ink-500 mt-2">{c.tactic}</p>
+          </div>
+        ))}
+      </div>
+      <div className="bg-ink-900 text-white rounded-2xl p-8">
+        <h3 className="font-bold text-lg mb-4">Birinchi 30 kun rejasi</h3>
+        <div className="grid sm:grid-cols-4 gap-4 text-sm">
+          {['1-7 kun: Instagram sahifa + 10 usta', '8-14 kun: Telegram bot + kanal', '15-21 kun: Google reklama', '22-30 kun: Birinchi B2B mijoz'].map((s,i) => (
+            <div key={i} className="bg-white/10 rounded-xl p-4"><div className="text-brand-400 font-bold text-xs mb-1">Hafta {i+1}</div>{s}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── 15. Huquqiy ─── */
+function LegalPage() {
+  const [tab, setTab] = useState('terms');
+  const docs = {
+    terms: { title: 'Foydalanish shartlari', sections: [
+      ['1. Umumiy qoidalar', 'Usta Bazar platformasidan foydalanish O\'zbekiston Respublikasi qonunlariga muvofiq amalga oshiriladi.'],
+      ['2. Xizmatlar', 'Platforma mijozlar va ustalarni bog\'lovchi vositachi hisoblanadi. To\'g\'ridan-to\'g\'ri ijrochi emas.'],
+      ['3. To\'lov', 'To\'lovlar escrow tizimi orqali amalga oshiriladi. Ish tasdiqlanguncha pul ustaga o\'tkazilmaydi.'],
+      ['4. Kafolat', '30 kunlik ish kafolati — muammo bo\'lsa bepul qayta bajarish yoki pul qaytarish.'],
+      ['5. Nizolar', 'Nizolar 48 soat ichida platforma moderatorlari tomonidan ko\'rib chiqiladi.'],
+    ]},
+    privacy: { title: 'Maxfiylik siyosati', sections: [
+      ['Ma\'lumot to\'plash', 'Telefon, ism, manzil va to\'lov ma\'lumotlari faqat xizmat ko\'rsatish uchun.'],
+      ['Himoya', 'Barcha ma\'lumotlar shifrlangan. PCI DSS standartlariga mos.'],
+      ['Uchinchi shaxslar', 'Ma\'lumotlar uchinchi shaxslarga sotilmaydi. Faqat qonun talabi bo\'lsa beriladi.'],
+      ['MyID', 'Usta tekshiruvi MyID orqali — davlat identifikatsiya tizimi.'],
+    ]},
+    offer: { title: 'Ommaviy oferta', sections: [
+      ['Mijoz ofertasi', 'Buyurtma berish orqali mijoz ushbu shartlarga rozilik bildiradi.'],
+      ['Usta ofertasi', 'Ro\'yxatdan o\'tish orqali usta 12.5% komissiya to\'lashga rozilik bildiradi.'],
+      ['B2B shartnoma', 'Korporativ mijozlar alohida shartnoma asosida ishlaydi.'],
+    ]},
+  };
+  const doc = docs[tab];
+  return (
+    <div className="page-enter max-w-3xl mx-auto px-4 py-12">
+      <h1 className="font-display text-2xl font-bold text-center mb-8">Huquqiy hujjatlar</h1>
+      <div className="flex gap-2 mb-6 justify-center flex-wrap">
+        {[['terms','Shartlar'],['privacy','Maxfiylik'],['offer','Oferta']].map(([id,l]) => (
+          <button key={id} onClick={() => setTab(id)} className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === id ? 'bg-brand-500 text-white' : 'bg-white border border-ink-200'}`}>{l}</button>
+        ))}
+      </div>
+      <div className="bg-white rounded-2xl border border-ink-100 p-8">
+        <h2 className="font-bold text-lg mb-6">{doc.title}</h2>
+        {doc.sections.map(([t,c],i) => (
+          <div key={i} className="mb-5">
+            <h3 className="font-semibold text-sm mb-1">{t}</h3>
+            <p className="text-sm text-ink-500 leading-relaxed">{c}</p>
+          </div>
+        ))}
+        <p className="text-xs text-ink-400 mt-6 pt-4 border-t">© 2026 Usta Bazar MChJ — Toshkent, O'zbekiston</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── App Root ─── */
+function App() {
+  const [page, setPage] = useState('landing');
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('ub_token'));
+  const [masterFilter, setMasterFilter] = useState({ city: 'Toshkent', q: '', category: '' });
+  const [selectedMaster, setSelectedMaster] = useState(null);
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [wsEvent, setWsEvent] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    api('/auth/me', {}, token).then(setUser).catch(() => {
+      localStorage.removeItem('ub_token');
+      setToken(null);
+    });
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const ws = new WebSocket(WS_URL);
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      setWsEvent({ ...msg, _t: Date.now() });
+      const noteText = msg.text || (msg.type === 'new_order' ? 'Yangi buyurtma: ' + msg.order_code : msg.type === 'order_update' ? 'Buyurtma yangilandi' : msg.type === 'chat' ? 'Yangi xabar' : 'Yangilanish');
+      try {
+        const notes = JSON.parse(localStorage.getItem('ub_notifs') || '[]') || DEFAULT_NOTIFS;
+        notes.unshift({ id: Date.now(), text: noteText, time: 'Hozir', read: false });
+        localStorage.setItem('ub_notifs', JSON.stringify(notes.slice(0, 10)));
+      } catch {}
+    };
+    return () => ws.close();
+  }, [token]);
+
+  const logout = () => { setUser(null); setToken(null); setCurrentOrder(null); localStorage.removeItem('ub_token'); };
+
+  const renderPage = () => {
+    switch (page) {
+      case 'landing': return <LandingPage setPage={setPage} setMasterFilter={setMasterFilter} />;
+      case 'masters': return <MastersListPage setPage={setPage} filter={masterFilter} setFilter={setMasterFilter} setSelectedMaster={setSelectedMaster} />;
+      case 'map': return <MapPage setPage={setPage} setSelectedMaster={setSelectedMaster} filter={masterFilter} />;
+      case 'profile': return <MasterProfilePage setPage={setPage} selectedMaster={selectedMaster} user={user} token={token} onBookOrder={setCurrentOrder} />;
+      case 'order': return <OrderChatPage setPage={setPage} token={token} user={user} currentOrder={currentOrder} setCurrentOrder={setCurrentOrder} wsEvent={wsEvent} />;
+      case 'customer': return <CustomerPage setPage={setPage} user={user} token={token} setCurrentOrder={setCurrentOrder} />;
+      case 'dashboard': return <MasterDashboardPage setPage={setPage} user={user} token={token} setCurrentOrder={setCurrentOrder} />;
+      case 'admin': return <AdminPanelPage user={user} token={token} setPage={setPage} />;
+      case 'payment': return <PaymentPage setPage={setPage} currentOrder={currentOrder} token={token} setCurrentOrder={setCurrentOrder} />;
+      case 'auth': return <AuthPage setPage={setPage} setUser={setUser} setToken={setToken} />;
+      case 'onboarding': return <OnboardingPage setPage={setPage} setUser={setUser} setToken={setToken} />;
+      case 'b2b': return <B2BPage setPage={setPage} />;
+      case 'investors': return <InvestorsPage setPage={setPage} />;
+      case 'roadmap': return <RoadmapPage setPage={setPage} />;
+      case 'referral': return <ReferralPage token={token} />;
+      case 'marketing': return <MarketingPage />;
+      case 'legal': return <LegalPage />;
+      default: return <LandingPage setPage={setPage} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Nav page={page} setPage={setPage} user={user} token={token} onLogout={logout} wsEvent={wsEvent} />
+      <main className="flex-1">{renderPage()}</main>
+      <Footer />
+      <EmergencyFAB setPage={setPage} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

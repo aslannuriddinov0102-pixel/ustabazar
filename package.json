@@ -1,0 +1,11 @@
+{
+  "name": "ustabazar",
+  "version": "1.4.0",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "bot": "node telegram/bot.js",
+    "postinstall": "cd backend && npm install"
+  },
+  "engines": { "node": ">=18" }
+}
