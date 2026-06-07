@@ -440,7 +440,7 @@ function PushButton({ token }) {
   if (!token) return null;
   return (
     <button onClick={enable} disabled={state === 'loading' || state === 'on'}
-      className="hidden sm:inline-flex px-2.5 py-2 rounded-lg text-xs font-medium text-ink-600 hover:bg-ink-100"
+      className="hidden sm:inline-flex px-3 py-2 rounded-lg text-sm font-medium text-ink-600 hover:bg-ink-100"
       title="Push bildirishnomalar">
       {state === 'on' ? '🔔 On' : state === 'loading' ? '...' : '🔔 Push'}
     </button>
@@ -777,7 +777,7 @@ function EmergencyFAB({ setPage }) {
 }
 
 function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
-  return (
+    return (
     <header className="sticky top-0 z-50">
       <div className="glass border-b border-ink-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -801,21 +801,21 @@ function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
                 </button>
               ))}
             </nav>
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-5 shrink-0 pl-3">
               <PushButton token={token} />
               <NotificationBell wsEvent={wsEvent} />
               {user ? (
-                <div className="hidden lg:flex items-center gap-2">
-                  <span className="text-xs text-ink-500 max-w-[8rem] truncate" title={user.name}>{user.name}</span>
-                  <button onClick={onLogout} className="text-xs text-ink-400 hover:text-ink-600">Chiqish</button>
+                <div className="hidden lg:flex items-center gap-4 min-w-0">
+                  <span className="text-sm text-ink-600 max-w-[10rem] truncate font-medium" title={user.name}>{user.name}</span>
+                  <button onClick={onLogout} className="text-sm text-ink-400 hover:text-ink-700 whitespace-nowrap">Chiqish</button>
                 </div>
               ) : (
                 <button onClick={() => setPage('auth')} className="px-4 py-2 border border-ink-200 text-sm font-medium rounded-xl hover:bg-ink-50 transition-colors">Kirish</button>
               )}
-              <button onClick={() => setPage('order')} className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition-colors">🆘</button>
+              <button onClick={() => setPage('order')} className="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors ml-1">🆘</button>
             </div>
           </div>
-          <div className="md:hidden flex items-center justify-between h-14 gap-2">
+          <div className="lg:hidden flex items-center justify-between h-14 gap-2">
             <button onClick={() => setPage('landing')} className="flex items-center gap-2">
               <img src="./logo.svg" alt="Usta Bazar" className="w-8 h-8 rounded-xl" />
               <span className="font-display font-bold text-lg">Usta <span className="text-brand-600">Bazar</span></span>
