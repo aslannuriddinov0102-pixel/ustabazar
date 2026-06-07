@@ -11,18 +11,30 @@ const empty = () => ({
   _seq: { users: 0, masters: 0, orders: 0, messages: 0, reviews: 0, referrals: 0, disputes: 0, payments: 0, leads: 0, uploads: 0 },
 });
 
-function load() {
+function loadJson() {
   if (!fs.existsSync(FILE)) return empty();
   return JSON.parse(fs.readFileSync(FILE, 'utf8'));
 }
 
-function save(data) {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+function saveJson(d) {
+  fs.writeFileSync(FILE, JSON.stringify(d, null, 2));
 }
 
-let data = load();
+let data = empty();
+let usePg = false;
+let pool = null;
+let initDone = false;
 
-function persist() { save(data); }
+function persist() {
+  if (usePg && pool) {
+    pool.query(
+      'INSERT INTO app_state (id, data, updated_at) VALUES (1, $1::jsonb, NOW()) ON CONFLICT (id) DO UPDATE SET data = $1::jsonb, updated_at = NOW()',
+      [JSON.stringify(data)]
+    ).catch(e => console.error('PG save xato:', e.message));
+  } else {
+    saveJson(data);
+  }
+}
 
 function nextId(table) {
   data._seq[table] = (data._seq[table] || 0) + 1;
@@ -73,8 +85,7 @@ function ensureDemo() {
   const hash = bcrypt.hashSync('demo1234', 10);
 
   if (!data.users.find(u => u.phone === '+998912345678')) {
-    const customer = { id: nextId('users'), name: 'Sardor Karimov', phone: '+998912345678', password: hash, role: 'customer', referral_code: genRefCode(), created_at: now() };
-    data.users.push(customer);
+    data.users.push({ id: nextId('users'), name: 'Sardor Karimov', phone: '+998912345678', password: hash, role: 'customer', referral_code: genRefCode(), created_at: now() });
   }
 
   DEMO_MASTERS.forEach(dm => {
@@ -94,10 +105,12 @@ function ensureDemo() {
     data.masters.push({ id: nextId('masters'), user_id: jamshid.id, title: 'Santexnik usta', city: 'Toshkent', category: 'Santexnika', bio: '12 yillik tajriba', rating: 4.9, verified: 1 });
   }
 
-  if (jamshid) {
-    const m = data.masters.find(x => x.user_id === jamshid.id);
-    if (m && !m.category) { m.category = 'Santexnika'; }
-  }
+  if (!data.leads) data.leads = [];
+  if (!data.telegram_subscribers) data.telegram_subscribers = [];
+  if (!data.push_subscriptions) data.push_subscriptions = [];
+  if (!data.uploads) data.uploads = [];
+  if (!data._seq.leads) data._seq.leads = 0;
+  if (!data._seq.uploads) data._seq.uploads = 0;
 
   let admin = data.users.find(u => u.role === 'admin');
   if (!admin) {
@@ -113,13 +126,6 @@ function ensureDemo() {
     admin.telegram = ADMIN_USER.telegram;
   }
 
-  if (!data.leads) data.leads = [];
-  if (!data.telegram_subscribers) data.telegram_subscribers = [];
-  if (!data.push_subscriptions) data.push_subscriptions = [];
-  if (!data.uploads) data.uploads = [];
-  if (!data._seq.leads) data._seq.leads = 0;
-  if (!data._seq.uploads) data._seq.uploads = 0;
-
   data.masters.forEach((m, i) => {
     if (m.lat == null || m.lng == null) {
       const c = masterCoords(m.city || 'Toshkent', i);
@@ -134,11 +140,40 @@ function ensureDemo() {
   console.log(`Ustalar: ${data.masters.length} ta`);
 }
 
-ensureDemo();
+async function init() {
+  if (initDone) return;
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require('pg');
+    usePg = true;
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.PG_SSL !== 'false' ? { rejectUnauthorized: false } : false,
+    });
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_state (
+        id INT PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    const res = await pool.query('SELECT data FROM app_state WHERE id = 1');
+    data = res.rows[0]?.data || empty();
+    console.log('Ma\'lumotlar bazasi: PostgreSQL (production)');
+  } else {
+    data = loadJson();
+    console.log('Ma\'lumotlar bazasi: JSON (lokal dev)');
+  }
+  ensureDemo();
+  initDone = true;
+}
+
+function reload() {
+  data = usePg ? data : loadJson();
+}
 
 module.exports = {
-  genRefCode, now, persist, masterCoords, CITY_COORDS,
+  init, genRefCode, now, persist, masterCoords, CITY_COORDS,
   get data() { return data; },
-  nextId,
-  reload() { data = load(); },
+  nextId, reload,
+  get dbType() { return usePg ? 'postgresql' : 'json'; },
 };

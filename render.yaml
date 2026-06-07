@@ -1,3 +1,9 @@
+databases:
+  - name: ustabazar-db
+    plan: free
+    databaseName: ustabazar
+    user: ustabazar
+
 services:
   - type: web
     name: ustabazar
@@ -9,6 +15,10 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ustabazar-db
+          property: connectionString
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: RUN_TELEGRAM_BOT
@@ -16,4 +26,14 @@ services:
       - key: VAPID_PUBLIC
         sync: false
       - key: VAPID_PRIVATE
+        sync: false
+      - key: PAYME_MERCHANT_ID
+        sync: false
+      - key: PAYME_KEY
+        sync: false
+      - key: CLICK_MERCHANT_ID
+        sync: false
+      - key: CLICK_SERVICE_ID
+        sync: false
+      - key: CLICK_SECRET_KEY
         sync: false

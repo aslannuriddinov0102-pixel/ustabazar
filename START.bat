@@ -7,7 +7,7 @@ if not exist node_modules (
 )
 echo.
 echo ========================================
-echo   USTA BAZAR API v1.4.0
+echo   USTA BAZAR API v1.5.0
 echo   http://localhost:3001/api/health
 echo   http://localhost:3001/Usta%%20Bazar.html
 echo ========================================

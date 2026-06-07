@@ -11,6 +11,7 @@ const store = require('./store');
 require('../telegram/env');
 const { sendTelegram } = require('../telegram/notify');
 const { VAPID_PUBLIC, sendPushAll } = require('./push');
+const payments = require('./payments');
 
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -115,9 +116,10 @@ app.get('/', (_, res) => res.redirect('/Usta%20Bazar.html'));
 
 app.get('/api/health', (_, res) => {
   res.json({
-    status: 'ok', service: 'Usta Bazar API', version: '1.4.0', phase: 1,
-    database: 'JSON (Windows-friendly)',
-    features: ['auth', 'masters', 'orders', 'chat', 'reviews', 'referrals', 'payments', 'admin', 'leads', 'telegram-bot', 'gps-map', 'push', 'uploads', 'websocket', 'deploy-ready'],
+    status: 'ok', service: 'Usta Bazar API', version: '1.5.0', phase: 2,
+    database: store.dbType,
+    payments: { payme: payments.paymeLive() ? 'live' : 'demo', click: payments.clickLive() ? 'live' : 'demo' },
+    features: ['auth', 'masters', 'orders', 'chat', 'reviews', 'referrals', 'payments-payme-click', 'escrow', 'admin', 'leads', 'telegram-bot', 'gps-map', 'push', 'uploads', 'postgresql', 'websocket', 'production-ready'],
     target: '$500K in 18 months',
   });
 });
@@ -284,17 +286,21 @@ app.post('/api/disputes', auth, (req, res) => {
 });
 
 app.post('/api/payments/payme', auth, (req, res) => {
-  const ext = 'PAYME-' + Date.now();
-  store.data.payments.push({ id: store.nextId('payments'), order_id: req.body.order_id, method: 'payme', amount: req.body.amount, status: 'pending', external_id: ext, created_at: store.now() });
-  store.persist();
-  res.json({ status: 'redirect', url: `https://payme.uz/checkout?order=${ext}`, message: 'Payme — production da API kalit kerak' });
+  const order = store.data.orders.find(o => o.id === +req.body.order_id);
+  if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+  if (order.customer_id !== req.user.id) return res.status(403).json({ error: 'Faqat mijoz to\'lay oladi' });
+  const amount = req.body.amount || (order.price || 0) + (order.fee || 0);
+  const session = payments.createPaymeSession(order.id, amount);
+  res.json({ status: 'redirect', mode: session.mode, url: session.url, message: session.message, external_id: session.external_id });
 });
 
 app.post('/api/payments/click', auth, (req, res) => {
-  const ext = 'CLICK-' + Date.now();
-  store.data.payments.push({ id: store.nextId('payments'), order_id: req.body.order_id, method: 'click', amount: req.body.amount, status: 'pending', external_id: ext, created_at: store.now() });
-  store.persist();
-  res.json({ status: 'redirect', url: `https://my.click.uz/checkout?order=${ext}`, message: 'Click — production da merchant ID kerak' });
+  const order = store.data.orders.find(o => o.id === +req.body.order_id);
+  if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+  if (order.customer_id !== req.user.id) return res.status(403).json({ error: 'Faqat mijoz to\'lay oladi' });
+  const amount = req.body.amount || (order.price || 0) + (order.fee || 0);
+  const session = payments.createClickSession(order.id, amount);
+  res.json({ status: 'redirect', mode: session.mode, url: session.url, message: session.message, external_id: session.external_id });
 });
 
 app.post('/api/payments/confirm', auth, (req, res) => {
@@ -302,15 +308,47 @@ app.post('/api/payments/confirm', auth, (req, res) => {
   const order = store.data.orders.find(o => o.id === +order_id);
   if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
   if (order.customer_id !== req.user.id) return res.status(403).json({ error: 'Faqat mijoz to\'lay oladi' });
-  order.status = 'in_progress';
-  order.paid_at = store.now();
-  store.data.payments.push({
-    id: store.nextId('payments'), order_id: order.id, method,
-    amount: (order.price || 0) + (order.fee || 0), status: 'completed', created_at: store.now(),
-  });
-  store.persist();
-  broadcast({ type: 'order_update', order_id: order.id, status: order.status, text: `${order.order_code} to'landi` });
-  res.json({ ok: true, status: order.status });
+  const r = payments.completePayment(order_id, method);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const note = `💳 ${order.order_code} to'landi`;
+  notifyOrderUsers(order, note);
+  pushNotify('To\'lov qabul qilindi', order.order_code);
+  broadcast({ type: 'order_update', order_id: order.id, status: r.status, text: `${order.order_code} to'landi` });
+  res.json({ ok: true, status: r.status, mode: 'demo' });
+});
+
+app.get('/api/payments/status/:order_id', auth, (req, res) => {
+  const order = store.data.orders.find(o => o.id === +req.params.order_id);
+  if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+  if (order.customer_id !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Ruxsat yo\'q' });
+  }
+  res.json(payments.paymentStatus(order.id));
+});
+
+app.post('/api/payments/webhook/payme', (req, res) => {
+  const result = payments.handlePaymeWebhook(req.body, req.headers.authorization || '');
+  if (result.result && req.body?.params?.account?.order_id) {
+    const order = store.data.orders.find(o => o.id === +req.body.params.account.order_id);
+    if (order) {
+      notifyOrderUsers(order, `💳 ${order.order_code} Payme orqali to'landi`);
+      broadcast({ type: 'order_update', order_id: order.id, status: 'in_progress' });
+    }
+  }
+  res.json(result);
+});
+
+app.get('/api/payments/webhook/click', (req, res) => {
+  const result = payments.handleClickWebhook(req.query);
+  if (result.error === 0 && req.query.merchant_trans_id) {
+    const orderId = String(req.query.merchant_trans_id).replace(/^UB-/, '');
+    const order = store.data.orders.find(o => o.id === +orderId);
+    if (order) {
+      notifyOrderUsers(order, `💳 ${order.order_code} Click orqali to'landi`);
+      broadcast({ type: 'order_update', order_id: order.id, status: 'in_progress' });
+    }
+  }
+  res.json(result);
 });
 
 app.get('/api/stats', (_, res) => {
@@ -482,16 +520,24 @@ function broadcast(payload) {
   clients.forEach(ws => { if (ws.readyState === 1) ws.send(msg); });
 }
 
-server.listen(PORT, () => {
-  const host = process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT;
-  console.log('');
-  console.log('========================================');
-  console.log('  USTA BAZAR API v1.4 ISHLAYAPTI!');
-  console.log('  ' + host + '/api/health');
-  console.log('  ' + host + '/Usta%20Bazar.html');
-  console.log('========================================');
-  console.log('');
-  if (process.env.TELEGRAM_BOT_TOKEN && process.env.RUN_TELEGRAM_BOT === 'true') {
-    try { require('../telegram/bot').startBot(); } catch (e) { console.log('Bot:', e.message); }
-  }
+store.init().then(() => {
+  server.listen(PORT, () => {
+    const host = process.env.RENDER_EXTERNAL_URL || 'http://localhost:' + PORT;
+    console.log('');
+    console.log('========================================');
+    console.log('  USTA BAZAR API v1.5 ISHLAYAPTI!');
+    console.log('  DB: ' + store.dbType);
+    console.log('  Payme: ' + (payments.paymeLive() ? 'LIVE' : 'demo'));
+    console.log('  Click: ' + (payments.clickLive() ? 'LIVE' : 'demo'));
+    console.log('  ' + host + '/api/health');
+    console.log('  ' + host + '/Usta%20Bazar.html');
+    console.log('========================================');
+    console.log('');
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.RUN_TELEGRAM_BOT === 'true') {
+      try { require('../telegram/bot').startBot(); } catch (e) { console.log('Bot:', e.message); }
+    }
+  });
+}).catch(err => {
+  console.error('Ishga tushirish xato:', err);
+  process.exit(1);
 });

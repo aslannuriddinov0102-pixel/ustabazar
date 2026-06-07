@@ -1814,17 +1814,38 @@ function PaymentPage({ setPage, currentOrder, token, setCurrentOrder }) {
   const methodLabels = { card: 'Bank kartasi', payme: 'Payme', click: 'Click', uzcard: 'Uzcard', humo: 'Humo' };
   const methodLabel = methodLabels[method] || method;
 
+  const finishPaid = async () => {
+    const full = await api('/orders/' + O.id, {}, token);
+    setCurrentOrder(full);
+    setPaid(true);
+  };
+
+  const pollPayment = () => {
+    let n = 0;
+    const t = setInterval(async () => {
+      n++;
+      try {
+        const st = await api('/payments/status/' + O.id, {}, token);
+        if (st.paid) { clearInterval(t); await finishPaid(); setPaying(false); }
+        else if (n > 40) { clearInterval(t); setPayError('To\'lov tasdiqlanmadi. Qayta urinib ko\'ring.'); setPaying(false); }
+      } catch { if (n > 40) { clearInterval(t); setPaying(false); } }
+    }, 3000);
+  };
+
   const handlePay = async () => {
     if (!token || !O?.id) { setPayError('Avval kirish va buyurtma kerak'); return; }
     setPaying(true);
     setPayError('');
     try {
-      if (method === 'payme') await api('/payments/payme', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
-      else if (method === 'click') await api('/payments/click', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
+      if (method === 'payme') {
+        const res = await api('/payments/payme', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
+        if (res.mode === 'live' && res.url) { window.open(res.url, '_blank'); pollPayment(); return; }
+      } else if (method === 'click') {
+        const res = await api('/payments/click', { method: 'POST', body: JSON.stringify({ order_id: O.id, amount: O.total }) }, token);
+        if (res.mode === 'live' && res.url) { window.open(res.url, '_blank'); pollPayment(); return; }
+      }
       await api('/payments/confirm', { method: 'POST', body: JSON.stringify({ order_id: O.id, method }) }, token);
-      const full = await api('/orders/' + O.id, {}, token);
-      setCurrentOrder(full);
-      setPaid(true);
+      await finishPaid();
     } catch (e) {
       setPayError(e.message);
     }
@@ -1911,6 +1932,7 @@ function PaymentPage({ setPage, currentOrder, token, setCurrentOrder }) {
             <div className="bg-white rounded-2xl border border-ink-100 p-6 text-center py-12">
               <div className="text-4xl mb-3">{method === 'payme' ? '🟢' : method === 'click' ? '🔵' : method === 'uzcard' ? '💙' : '❤️'}</div>
               <p className="text-ink-600 text-sm">To'lovni yakunlash uchun <strong>{methodLabel}</strong> ga yo'naltirilasiz.</p>
+              <p className="text-xs text-ink-400 mt-2">Merchant kalit qo'shilganda haqiqiy to'lov. Hozir demo rejimda tasdiqlanadi.</p>
             </div>
           )}
         </div>
