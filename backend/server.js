@@ -33,7 +33,7 @@ function notifyOrderUsers(order, text) {
 }
 
 function pushNotify(title, body) {
-  sendPushAll({ title, body, icon: '/manifest.webmanifest' });
+  sendPushAll({ title, body, icon: '/logo-icon.svg' });
 }
 
 const app = express();

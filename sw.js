@@ -1,5 +1,5 @@
-const CACHE = 'ustabazar-v3';
-const ASSETS = ['./Usta Bazar.html', './manifest.webmanifest'];
+const CACHE = 'ustabazar-v4';
+const ASSETS = ['./Usta Bazar.html', './manifest.webmanifest', './logo.svg', './logo-icon.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -19,8 +19,8 @@ self.addEventListener('push', (e) => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: data.icon || '/manifest.webmanifest',
-      badge: data.icon || '/manifest.webmanifest',
+      icon: data.icon || '/logo-icon.svg',
+      badge: data.icon || '/logo-icon.svg',
       data: { url: data.url || './Usta%20Bazar.html' },
     })
   );
