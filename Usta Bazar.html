@@ -252,24 +252,6 @@ const ROADMAP_PHASES = [
 
 const PAGES = [...MAIN_PAGES, ...MVP_PAGES];
 
-const NAV_PRIMARY = [
-  { id: 'landing', label: 'Bosh sahifa' },
-  { id: 'masters', label: 'Ustalar' },
-  { id: 'map', label: 'GPS xarita' },
-  { id: 'order', label: 'Buyurtma' },
-];
-
-function navExtras(user) {
-  const ids = new Set(NAV_PRIMARY.map(p => p.id));
-  const rolePage = user?.role === 'admin' ? 'admin' : user?.role === 'master' ? 'dashboard' : user ? 'customer' : 'auth';
-  const list = PAGES.filter(p => !ids.has(p.id));
-  if (!ids.has(rolePage)) {
-    const rp = PAGES.find(p => p.id === rolePage);
-    if (rp) list.unshift(rp);
-  }
-  return list;
-}
-
 const FINANCIALS = [
   { year: '2026', masters: 500, orders: '5 000', gmv: '$120K', revenue: '$15K', margin: '12.5%' },
   { year: '2027', masters: '2 000', orders: '25 000', gmv: '$600K', revenue: '$75K', margin: '12.5%' },
@@ -794,63 +776,30 @@ function EmergencyFAB({ setPage }) {
   );
 }
 
-function NavMenuDropdown({ page, setPage, user }) {
-  const [open, setOpen] = useState(false);
-  const extras = navExtras(user);
-  return (
-    <div className="relative hidden md:block">
-      <button onClick={() => setOpen(!open)} className={`px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${open ? 'bg-ink-100 text-ink-800' : 'text-ink-600 hover:bg-ink-100'}`}>
-        Yana ▾
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}></div>
-          <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl border border-ink-200 shadow-xl z-50 py-1 max-h-72 overflow-y-auto">
-            {extras.map(p => (
-              <button key={p.id} onClick={() => { setPage(p.id); setOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-ink-50 ${page === p.id ? 'text-brand-600 font-semibold bg-brand-50' : 'text-ink-700'}`}>
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
-  const roleBtn = user?.role === 'admin'
-    ? { id: 'admin', label: 'Admin' }
-    : user?.role === 'master'
-      ? { id: 'dashboard', label: 'Panel' }
-      : user
-        ? { id: 'customer', label: 'Kabinet' }
-        : null;
-
   return (
     <header className="sticky top-0 z-50">
       <div className="glass border-b border-ink-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="hidden md:grid grid-cols-[auto_1fr_auto] items-center h-16 gap-4">
-            <button onClick={() => setPage('landing')} className="flex items-center gap-2.5 group">
+          <div className="hidden lg:grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2">
+            <button onClick={() => setPage('landing')} className="flex items-center gap-2.5 group shrink-0">
               <img src="./logo.svg" alt="Usta Bazar" className="w-9 h-9 rounded-xl shadow-lg shadow-brand-500/25" />
               <span className="font-display font-bold text-xl text-ink-900">Usta <span className="text-brand-600">Bazar</span></span>
             </button>
-            <nav className="flex items-center justify-center gap-0.5 flex-wrap">
-              {NAV_PRIMARY.map(p => (
+            <nav className="flex flex-wrap items-center justify-center gap-0.5 px-1">
+              {MAIN_PAGES.map(p => (
                 <button key={p.id} onClick={() => setPage(p.id)}
-                  className={`px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${page === p.id ? 'bg-brand-100 text-brand-700' : 'text-ink-600 hover:bg-ink-100'}`}>
+                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-brand-100 text-brand-700' : 'text-ink-600 hover:bg-ink-100'}`}>
                   {p.label}
                 </button>
               ))}
-              {roleBtn && (
-                <button onClick={() => setPage(roleBtn.id)}
-                  className={`px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${page === roleBtn.id ? 'bg-emerald-100 text-emerald-700' : 'text-ink-600 hover:bg-ink-100'}`}>
-                  {roleBtn.label}
+              <span className="w-px h-4 bg-ink-200 mx-0.5"></span>
+              {MVP_PAGES.map(p => (
+                <button key={p.id} onClick={() => setPage(p.id)}
+                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-emerald-100 text-emerald-700' : 'text-ink-500 hover:bg-ink-100'}`}>
+                  {p.label}
                 </button>
-              )}
-              <NavMenuDropdown page={page} setPage={setPage} user={user} />
+              ))}
             </nav>
             <div className="flex items-center justify-end gap-2">
               <PushButton token={token} />
