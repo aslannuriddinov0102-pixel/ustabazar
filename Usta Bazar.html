@@ -715,18 +715,6 @@ const Icon = ({ d, className = 'w-5 h-5' }) => (
 );
 
 /* ─── Shared Components ─── */
-function AnnouncementBar() {
-  return (
-    <div className="bg-ink-900 text-white text-xs sm:text-sm">
-      <div className="uz-gradient"></div>
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2 text-center">
-        <span className="bg-brand-500 text-white px-2 py-0.5 rounded font-bold text-[10px] sm:text-xs">18 OY REJA</span>
-        <span>Maqsad <strong>$500K+</strong> — navigatsiyadan <strong>Yo'l xaritasi</strong> ni oching va boshlang</span>
-      </div>
-    </div>
-  );
-}
-
 function LiveTicker() {
   const items = [...LIVE_FEED, ...LIVE_FEED];
   return (
@@ -805,7 +793,6 @@ function EmergencyFAB({ setPage }) {
 function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
   return (
     <header className="sticky top-0 z-50">
-      <AnnouncementBar />
       <ApiStatus />
       <div className="glass border-b border-ink-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
