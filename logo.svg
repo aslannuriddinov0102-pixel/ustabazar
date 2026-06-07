@@ -1,17 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Usta Bazar">
   <defs>
-    <linearGradient id="ub-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fb923c"/>
-      <stop offset="100%" stop-color="#ea580c"/>
+    <linearGradient id="ub-g" x1="8" y1="6" x2="112" y2="114" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="45%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#c2410c"/>
     </linearGradient>
-    <filter id="ub-shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#c2410c" flood-opacity="0.35"/>
+    <linearGradient id="ub-shine" x1="20" y1="12" x2="90" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="ub-soft" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#9a3412" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <rect width="120" height="120" rx="28" fill="url(#ub-bg)" filter="url(#ub-shadow)"/>
-  <g fill="#fff" transform="translate(60 58)">
-    <path d="M-22-8c0-6 5-11 11-11 3 0 6 1 8 3l5-5 4 4-5 5c2 2 3 5 3 8 0 6-5 11-11 11s-11-5-11-11zm11 4c3 0 5-2 5-5s-2-5-5-5-5 2-5 5 2 5 5 5z" opacity="0.95"/>
-    <path d="M8-18l6 6-14 14c-2 2-5 2-7 0l-3-3c-2-2-2-5 0-7l14-14 4 4z" transform="translate(6 2) scale(0.85)"/>
-    <text x="0" y="22" font-family="Arial,Helvetica,sans-serif" font-size="26" font-weight="800" text-anchor="middle" letter-spacing="-1">UB</text>
+  <rect width="120" height="120" rx="28" fill="url(#ub-g)" filter="url(#ub-soft)"/>
+  <rect width="120" height="120" rx="28" fill="url(#ub-shine)"/>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 24 L88 44 V78 C88 82 84 86 80 86 H40 C36 86 32 82 32 78 V44 Z" stroke-width="5" fill="rgba(255,255,255,0.12)"/>
+    <path d="M44 86 V58 H76 V86" stroke-width="4"/>
+    <circle cx="60" cy="70" r="4" fill="#fff" stroke="none"/>
+    <path d="M78 52 L92 38 L98 44 L82 60" stroke-width="4.5"/>
+    <path d="M92 38 H84 V46" stroke-width="4.5"/>
   </g>
 </svg>
