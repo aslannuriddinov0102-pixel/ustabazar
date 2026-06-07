@@ -252,34 +252,29 @@ const ROADMAP_PHASES = [
 
 const PAGES = [...MAIN_PAGES, ...MVP_PAGES];
 
+const YANA_IDS = ['roadmap', 'auth', 'onboarding', 'referral', 'b2b', 'marketing', 'investors', 'legal', 'admin'];
+
 function getNavByRole(user) {
   const pick = (ids, list) => list.filter(p => ids.includes(p.id));
+  const yana = (ids) => pick(ids, MVP_PAGES);
   if (!user) {
-    return {
-      main: pick(['landing', 'masters', 'map', 'profile', 'order'], MAIN_PAGES),
-      mvp: pick(['auth', 'onboarding', 'referral', 'b2b', 'roadmap', 'investors', 'legal'], MVP_PAGES),
-      all: pick(['landing', 'masters', 'map', 'profile', 'order', 'auth', 'onboarding', 'referral', 'b2b', 'roadmap', 'investors', 'legal'], PAGES),
-    };
+    const main = pick(['landing', 'masters', 'map', 'profile', 'order'], MAIN_PAGES);
+    const more = yana(YANA_IDS.filter(id => id !== 'admin'));
+    return { main, more, all: [...main, ...more] };
   }
   if (user.role === 'admin') {
-    return {
-      main: MAIN_PAGES,
-      mvp: MVP_PAGES.filter(p => p.id !== 'auth'),
-      all: PAGES.filter(p => p.id !== 'auth'),
-    };
+    const main = MAIN_PAGES;
+    const more = yana(YANA_IDS.filter(id => id !== 'auth'));
+    return { main, more, all: [...main, ...more] };
   }
   if (user.role === 'master') {
-    return {
-      main: pick(['landing', 'dashboard', 'order', 'payment'], MAIN_PAGES),
-      mvp: pick(['referral', 'b2b', 'legal'], MVP_PAGES),
-      all: pick(['landing', 'dashboard', 'order', 'payment', 'referral', 'b2b', 'legal'], PAGES),
-    };
+    const main = pick(['landing', 'dashboard', 'order', 'payment'], MAIN_PAGES);
+    const more = yana(['roadmap', 'referral', 'b2b', 'legal', 'investors']);
+    return { main, more, all: [...main, ...more] };
   }
-  return {
-    main: pick(['landing', 'masters', 'map', 'profile', 'order', 'customer', 'payment'], MAIN_PAGES),
-    mvp: pick(['referral', 'b2b', 'legal'], MVP_PAGES),
-    all: pick(['landing', 'masters', 'map', 'profile', 'order', 'customer', 'payment', 'referral', 'b2b', 'legal'], PAGES),
-  };
+  const main = pick(['landing', 'masters', 'map', 'profile', 'order', 'customer', 'payment'], MAIN_PAGES);
+  const more = yana(['roadmap', 'referral', 'b2b', 'legal', 'investors']);
+  return { main, more, all: [...main, ...more] };
 }
 
 function homePageForUser(user) {
@@ -813,6 +808,33 @@ function EmergencyFAB({ setPage }) {
   );
 }
 
+function NavYanaMenu({ page, setPage, items }) {
+  const [open, setOpen] = useState(false);
+  if (!items.length) return null;
+  const active = items.some(p => p.id === page);
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)}
+        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${active || open ? 'bg-emerald-100 text-emerald-700' : 'text-ink-500 hover:bg-ink-100'}`}>
+        Yana ▾
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}></div>
+          <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl border border-ink-200 shadow-xl z-50 py-1 max-h-80 overflow-y-auto">
+            {items.map(p => (
+              <button key={p.id} onClick={() => { setPage(p.id); setOpen(false); }}
+                className={`w-full text-left px-4 py-2 text-sm hover:bg-ink-50 ${page === p.id ? 'text-brand-600 font-semibold bg-brand-50' : 'text-ink-700'}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
   const nav = getNavByRole(user);
   const roleLabel = user?.role === 'admin' ? 'Admin' : user?.role === 'master' ? 'Usta' : user ? 'Mijoz' : null;
@@ -836,13 +858,12 @@ function Nav({ page, setPage, user, token, onLogout, wsEvent }) {
                   {p.label}
                 </button>
               ))}
-              {nav.mvp.length > 0 && <span className="w-px h-4 bg-ink-200 mx-0.5"></span>}
-              {nav.mvp.map(p => (
-                <button key={p.id} onClick={() => setPage(p.id)}
-                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${page === p.id ? 'bg-emerald-100 text-emerald-700' : 'text-ink-500 hover:bg-ink-100'}`}>
-                  {p.label}
-                </button>
-              ))}
+              {nav.more.length > 0 && (
+                <>
+                  <span className="w-px h-4 bg-ink-200 mx-0.5"></span>
+                  <NavYanaMenu page={page} setPage={setPage} items={nav.more} />
+                </>
+              )}
             </nav>
             <div className="flex items-center justify-end gap-5 shrink-0 pl-3">
               <PushButton token={token} />
@@ -2826,6 +2847,11 @@ function App() {
       setToken(null);
     });
   }, [token]);
+
+  useEffect(() => {
+    const allowed = getNavByRole(user).all.map(p => p.id);
+    if (!allowed.includes(page)) setPage(homePageForUser(user));
+  }, [user, page]);
 
   useEffect(() => {
     if (!token) return;
